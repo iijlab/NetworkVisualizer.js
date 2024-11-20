@@ -1,0 +1,25 @@
+{
+  "nodes": {
+    "leaf": {
+      "radius": 8,
+      "strokeWidth": 2
+    },
+    "cluster": {
+      "radius": 12,
+      "strokeWidth": 3
+    }
+  },
+  "links": {
+    "width": 5,
+    "arrowSize": 5
+  },
+  "colors": {
+    "ranges": [
+      { "max": 0, "color": "#006994" },
+      { "max": 45, "color": "#4CAF50" },
+      { "max": 55, "color": "#FFC107" },
+      { "max": 75, "color": "#FF9800" },
+      { "max": 100, "color": "#f44336" }
+    ]
+  }
+}

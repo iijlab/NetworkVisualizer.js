@@ -1,0 +1,47 @@
+{
+  "nodes": [
+    {
+      "id": "B3_1",
+      "x": 300,
+      "y": 200,
+      "allocation": 45,
+      "type": "leaf"
+    },
+    {
+      "id": "B3_2",
+      "x": 500,
+      "y": 200,
+      "allocation": 30,
+      "type": "leaf"
+    },
+    {
+      "id": "B3_3",
+      "x": 400,
+      "y": 400,
+      "allocation": 65,
+      "type": "leaf"
+    }
+  ],
+  "links": [
+    {
+      "source": "B3_1",
+      "target": "B3_2",
+      "allocation": 40,
+      "capacity": "100 units"
+    },
+    {
+      "source": "B3_2",
+      "target": "B3_3",
+      "allocation": 35,
+      "capacity": "100 units"
+    },
+    {
+      "source": "B3_3",
+      "target": "B3_1",
+      "allocation": 55,
+      "capacity": "100 units"
+    }
+  ],
+  "parentNetwork": "B",
+  "networkId": "B3"
+}

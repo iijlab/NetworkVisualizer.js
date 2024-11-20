@@ -1,0 +1,85 @@
+{
+  "nodes": [
+    {
+      "id": "A",
+      "x": 400,
+      "y": 200,
+      "allocation": 55,
+      "type": "cluster",
+      "childNetwork": "A"
+    },
+    {
+      "id": "B",
+      "x": 200,
+      "y": 400,
+      "allocation": 35,
+      "type": "cluster",
+      "childNetwork": "B"
+    },
+    {
+      "id": "C",
+      "x": 600,
+      "y": 400,
+      "allocation": 50,
+      "type": "cluster",
+      "childNetwork": "C"
+    },
+    {
+      "id": "D",
+      "x": 400,
+      "y": 500,
+      "allocation": 80,
+      "type": "leaf"
+    }
+  ],
+  "links": [
+    {
+      "source": "A",
+      "target": "B",
+      "allocation": 60,
+      "capacity": "100"
+    },
+    {
+      "source": "B",
+      "target": "A",
+      "allocation": 40,
+      "capacity": "100"
+    },
+    {
+      "source": "B",
+      "target": "C",
+      "allocation": 35,
+      "capacity": "100"
+    },
+    {
+      "source": "C",
+      "target": "B",
+      "allocation": 50,
+      "capacity": "100"
+    },
+    {
+      "source": "C",
+      "target": "A",
+      "allocation": 70,
+      "capacity": "100"
+    },
+    {
+      "source": "A",
+      "target": "C",
+      "allocation": 85,
+      "capacity": "100"
+    },
+    {
+      "source": "B",
+      "target": "D",
+      "allocation": 45,
+      "capacity": "100"
+    }
+  ],
+  "metadata": {
+    "id": "root",
+    "parentNetwork": null,
+    "description": "Root network view",
+    "timestamp": "2024-11-13T12:00:00Z"
+  }
+}

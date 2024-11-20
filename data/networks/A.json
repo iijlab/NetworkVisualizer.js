@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "id": "A",
+    "parentNetwork": "root"
+  },
+  "nodes": [
+    {
+      "id": "A1",
+      "x": 300,
+      "y": 200,
+      "allocation": 30,
+      "type": "leaf"
+    },
+    {
+      "id": "A2",
+      "x": 500,
+      "y": 200,
+      "allocation": 45,
+      "type": "cluster",
+      "childNetwork": "A2"
+    },
+    {
+      "id": "A3",
+      "x": 400,
+      "y": 400,
+      "allocation": 60,
+      "type": "leaf"
+    }
+  ],
+  "links": [
+    {
+      "source": "A1",
+      "target": "A2",
+      "allocation": 40,
+      "capacity": "100 units"
+    },
+    {
+      "source": "A2",
+      "target": "A3",
+      "allocation": 55,
+      "capacity": "100 units"
+    },
+    {
+      "source": "A3",
+      "target": "A1",
+      "allocation": 65,
+      "capacity": "100 units"
+    }
+  ]
+}

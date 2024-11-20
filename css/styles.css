@@ -1,0 +1,529 @@
+/* Base layout */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Visualization container */
+.visualization-container {
+  flex: 1;
+  position: relative;
+  min-width: 0; /* Prevents flex item from overflowing */
+}
+
+#network {
+  width: 100%;
+  height: 100%;
+}
+
+/* Node and link styles */
+.node {
+  cursor: pointer;
+}
+
+.node-label {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.link-half {
+  cursor: pointer;
+  transition: stroke-width 0.2s;
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  padding: 8px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  pointer-events: none;
+  display: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  z-index: 100;
+}
+
+/* Details Panel */
+.details-panel {
+  width: 300px;
+  background: white;
+  border-left: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.details-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+}
+
+.no-selection-message {
+  color: #666;
+  text-align: center;
+  margin-top: 20px;
+  font-style: italic;
+}
+
+/* Details content sections */
+.detail-section {
+  margin-bottom: 20px;
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #333;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.detail-section table td {
+  padding: 8px 0;
+  line-height: 1.4;
+}
+
+.detail-section table td:first-child {
+  color: #666;
+  width: 40%;
+  padding-right: 10px;
+}
+
+.detail-section table td:last-child {
+  font-weight: 500;
+}
+
+.chart-container {
+  margin: 15px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  background: #f8f9fa;
+}
+
+/* Navigation controls */
+.nav-button {
+  cursor: pointer;
+  transition: fill 0.2s;
+}
+
+.nav-button:hover {
+  fill: #e0e0e0;
+}
+
+.breadcrumb {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  fill: #666;
+}
+
+/* Critical Resources Highlighting */
+.critical-resource {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+/* Chart Placeholders */
+.chart-placeholder {
+  width: 100%;
+  height: 150px;
+  background: #f8f9fa;
+  border: 1px dashed #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-style: italic;
+}
+
+/* Sticky Legend */
+.details-legend {
+  border-top: 1px solid #ddd;
+  padding: 15px;
+  background: white;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin: 5px 0;
+}
+
+.legend-color {
+  width: 30px;
+  height: 10px;
+  margin-right: 10px;
+  border-radius: 2px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .details-panel {
+    width: 250px;
+  }
+}
+
+/* Accessibility */
+.details-panel:focus {
+  outline: 2px solid #007bff;
+  outline-offset: -2px;
+}
+
+.nav-button:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .details-panel {
+    width: 100%;
+    border: none;
+  }
+
+  .chart-container {
+    break-inside: avoid;
+  }
+
+  .details-legend {
+    position: static;
+    margin: 20px;
+    break-inside: avoid;
+  }
+
+  .nav-button {
+    display: none;
+  }
+}
+
+/* Additional utility classes */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.font-bold {
+  font-weight: bold;
+}
+
+.text-muted {
+  color: #666;
+}
+
+.text-danger {
+  color: #dc3545;
+}
+
+.text-warning {
+  color: #ffc107;
+}
+
+.text-success {
+  color: #28a745;
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Left Panel */
+.parent-network-panel {
+  width: 250px;
+  background: white;
+  border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, width 0.3s ease;
+}
+
+.parent-network-panel.collapsed {
+  width: 40px;
+}
+
+.parent-network-header {
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+}
+
+.parent-network-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.parent-network-content {
+  padding: 15px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.toggle-panel {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  color: #666;
+  transition: color 0.2s;
+  font-size: 20px;
+}
+
+.toggle-panel:hover {
+  color: #333;
+}
+
+/* Parent network visualization styles */
+.parent-network-preview {
+  width: 100%;
+  height: 200px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.parent-node {
+  fill-opacity: 0.7;
+  cursor: pointer;
+  transition: fill-opacity 0.2s;
+}
+
+.parent-node:hover {
+  fill-opacity: 1;
+}
+
+.parent-node.current {
+  stroke: #666;
+  stroke-width: 2px;
+}
+
+.parent-link {
+  stroke-opacity: 0.5;
+  transition: stroke-opacity 0.2s;
+}
+
+.parent-link:hover {
+  stroke-opacity: 0.8;
+}
+
+/* Animation for panel collapse/expand */
+.parent-network-panel .content-wrapper {
+  transition: opacity 0.3s ease;
+}
+
+.parent-network-panel.collapsed .content-wrapper {
+  opacity: 0;
+  display: none;
+}
+
+/* Add to your styles.css */
+.navigation-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+}
+
+.network-path {
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.path-segment {
+  white-space: nowrap;
+  color: #666;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.path-segment:hover {
+  color: #333;
+}
+
+.path-separator {
+  color: #999;
+  margin: 0 4px;
+}
+
+.path-segment.truncated {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px; /* Adjust based on your needs */
+}
+
+/* Adjust the visualization container to account for the navigation bar */
+.visualization-container {
+  padding-top: 40px; /* Same as navigation-bar height */
+}
+
+/* Theme toggle styles */
+.theme-toggle {
+  background: none;
+  border: 1px solid rgba(0,0,0,0.1);
+  cursor: pointer;
+  padding: 8px;
+  margin-right: 16px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+/* Theme toggle in dark mode */
+body.dark-mode .theme-toggle {
+  border-color: rgba(255,255,255,0.2);
+}
+
+body.dark-mode .theme-toggle:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* Dark mode styles */
+body.dark-mode {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+body.dark-mode .navigation-bar {
+  background: #2d2d2d;
+  border-bottom-color: #404040;
+}
+
+body.dark-mode .theme-toggle .sun-icon {
+  display: none;
+}
+
+body.dark-mode .theme-toggle .moon-icon {
+  display: block;
+}
+
+body.dark-mode .path-segment {
+  color: #bbb;
+}
+
+body.dark-mode .path-segment:hover {
+  color: #fff;
+}
+
+body.dark-mode .path-separator {
+  color: #666;
+}
+
+body.dark-mode .details-panel {
+  background: #2d2d2d;
+  border-left-color: #404040;
+}
+
+body.dark-mode .details-legend {
+  background: #2d2d2d;
+  border-top-color: #404040;
+}
+
+body.dark-mode .detail-section {
+  background: #2d2d2d;
+}
+
+body.dark-mode .detail-section h3 {
+  color: #fff;
+  border-bottom-color: #404040;
+}
+
+body.dark-mode .detail-section table td:first-child {
+  color: #bbb;
+}
+
+body.dark-mode .chart-container {
+  background: #222;
+  border-color: #404040;
+}
+
+body.dark-mode .tooltip {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: #fff;
+}
+
+body.dark-mode .node-label {
+  fill: #fff; /* For SVG text elements */
+  color: #fff; /* For regular text elements */
+}
+
+body.dark-mode .breadcrumb {
+  fill: #bbb;
+}
+
+/* Fix moon icon visibility */
+.theme-toggle .moon-icon {
+  display: none;
+}
+
+body.dark-mode .theme-toggle .moon-icon {
+  display: block;
+}
+
+body.dark-mode .link-selection,
+body.dark-mode circle[class*="selection"] {
+   stroke: rgba(255, 255, 255, 0.8) !important;
+}

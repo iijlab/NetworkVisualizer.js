@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Network Visualization</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="visualization-container">
+        <div id="tooltip" class="tooltip"></div>
+        <svg id="network"></svg>
+      </div>
+      <div id="details-panel" class="details-panel">
+        <div class="details-content">
+          <div class="no-selection-message">
+            Select a node or link to view details
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/DetailsPanelManager.js"></script>
+    <script src="js/NetworkStats.js"></script>
+    <script src="js/NetworkVisualizer.js"></script>
+    <script src="js/init.js"></script>
+  </body>
+</html>

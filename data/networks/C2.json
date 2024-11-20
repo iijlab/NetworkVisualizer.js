@@ -1,0 +1,47 @@
+{
+  "nodes": [
+    {
+      "id": "C2_1",
+      "x": 300,
+      "y": 200,
+      "allocation": 55,
+      "type": "leaf"
+    },
+    {
+      "id": "C2_2",
+      "x": 500,
+      "y": 200,
+      "allocation": 70,
+      "type": "leaf"
+    },
+    {
+      "id": "C2_3",
+      "x": 400,
+      "y": 400,
+      "allocation": 40,
+      "type": "leaf"
+    }
+  ],
+  "links": [
+    {
+      "source": "C2_1",
+      "target": "C2_2",
+      "allocation": 60,
+      "capacity": "100 units"
+    },
+    {
+      "source": "C2_2",
+      "target": "C2_3",
+      "allocation": 45,
+      "capacity": "100 units"
+    },
+    {
+      "source": "C2_3",
+      "target": "C2_1",
+      "allocation": 35,
+      "capacity": "100 units"
+    }
+  ],
+  "parentNetwork": "C",
+  "networkId": "C2"
+}
