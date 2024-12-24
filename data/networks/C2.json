@@ -1,47 +1,94 @@
 {
+  "metadata": {
+    "id": "C2",
+    "parentNetwork": "C",
+    "lastUpdated": "2024-12-24T12:00:00Z",
+    "updateInterval": 5000,
+    "retentionPeriod": 3600
+  },
   "nodes": [
     {
       "id": "C2_1",
       "x": 300,
       "y": 200,
-      "allocation": 55,
-      "type": "leaf"
+      "type": "leaf",
+      "metrics": {
+        "current": {
+          "allocation": 55,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     },
     {
       "id": "C2_2",
       "x": 500,
       "y": 200,
-      "allocation": 70,
-      "type": "leaf"
+      "type": "leaf",
+      "metrics": {
+        "current": {
+          "allocation": 70,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     },
     {
       "id": "C2_3",
       "x": 400,
       "y": 400,
-      "allocation": 40,
-      "type": "leaf"
+      "type": "leaf",
+      "metrics": {
+        "current": {
+          "allocation": 40,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     }
   ],
   "links": [
     {
       "source": "C2_1",
       "target": "C2_2",
-      "allocation": 60,
-      "capacity": "100 units"
+      "metrics": {
+        "current": {
+          "allocation": 60,
+          "capacity": 100,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     },
     {
       "source": "C2_2",
       "target": "C2_3",
-      "allocation": 45,
-      "capacity": "100 units"
+      "metrics": {
+        "current": {
+          "allocation": 45,
+          "capacity": 100,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     },
     {
       "source": "C2_3",
       "target": "C2_1",
-      "allocation": 35,
-      "capacity": "100 units"
+      "metrics": {
+        "current": {
+          "allocation": 35,
+          "capacity": 100,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     }
-  ],
-  "parentNetwork": "C",
-  "networkId": "C2"
+  ]
 }

@@ -34,11 +34,21 @@ class NetworkVisualizer {
         this.detailsPanel.classList.remove('hidden'); // Always show panel
 
         // Create the details panel manager
-        this.detailsPanelManager = new DetailsPanelManager(this.detailsPanel);
+        this.detailsPanelManager = new DetailsPanelManager(this.detailsPanel, this.config);
 
         // Initialize network path
         this.networkPath = [];
         this.setupNavigationBar();
+
+        // Properties for dynamic updates
+        this.updateInterval = null;
+        this.lastUpdate = null;
+        this.dataCache = new Map();
+        this.updateCallbacks = new Set();
+        this.transitions = {
+            duration: 750,
+            ease: d3.easeCubic
+        };
 
         // Add click handler to the container for blank space clicks
         const container = document.querySelector(this.containerId);
@@ -49,6 +59,161 @@ class NetworkVisualizer {
             }
         });
     }
+
+    // New method to start dynamic updates
+    startDynamicUpdates(networkId) {
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+        }
+
+        const network = this.currentNetwork;
+        const updateInterval = network?.metadata?.updateInterval || 2000; // Default to 2 seconds
+
+        console.log(`Starting dynamic updates for network ${networkId} with interval ${updateInterval}ms`);
+
+        this.updateInterval = setInterval(async () => {
+            if (this.mockDataGenerator) {
+                const updates = this.mockDataGenerator.generateUpdate();
+                console.log('Applying update:', updates);
+                this.applyNetworkUpdates(updates);
+            } else {
+                try {
+                    const updates = await this.fetchNetworkUpdates(networkId);
+                    this.applyNetworkUpdates(updates);
+                } catch (error) {
+                    console.error('Error fetching network updates:', error);
+                }
+            }
+        }, updateInterval);
+    }
+
+    // New method to fetch and apply updates
+    async fetchAndApplyUpdates(networkId) {
+        try {
+            const updates = await this.fetchNetworkUpdates(networkId);
+            if (!updates) return;
+
+            this.applyNetworkUpdates(updates);
+            this.lastUpdate = updates.timestamp;
+        } catch (error) {
+            console.error('Error fetching network updates:', error);
+        }
+    }
+
+    getColorForMetric(metrics) {
+        const metricName = this.config.visualization.metric;
+        const value = metrics?.current?.[metricName] ?? 0;
+
+        // Debug log
+        console.log('Getting color for value:', value);
+
+        const range = this.config.visualization.ranges.find(r => value <= r.max);
+        const color = range ? range.color : this.config.visualization.ranges[this.config.visualization.ranges.length - 1].color;
+
+        // Debug log
+        console.log('Selected color:', color);
+
+        return color;
+    }
+
+    // New method to apply updates with animations
+    applyNetworkUpdates(updates) {
+        if (!updates || !updates.changes) {
+            console.warn('Invalid update data received');
+            return;
+        }
+
+        const svg = d3.select(this.containerId);
+        const metricName = this.config.visualization.metric;
+        const self = this;
+
+        // Update nodes
+        Object.entries(updates.changes.nodes || {}).forEach(([id, change]) => {
+            // Find node with matching text content
+            const nodeGroups = svg.selectAll('g.node').filter(function () {
+                return d3.select(this).select('text').text() === id;
+            });
+
+            nodeGroups.each(function () {
+                const nodeGroup = d3.select(this);
+                // Get the main circle (second circle, index 1)
+                const circle = nodeGroup.select('circle:nth-child(2)');
+
+                if (!circle.empty()) {
+                    const newMetric = change.metrics?.current;
+                    if (newMetric && newMetric[metricName] !== undefined) {
+                        const newValue = newMetric[metricName];
+                        console.log(`Updating node ${id} to ${newValue}`);
+
+                        // Update stored data
+                        const nodeData = self.currentNetwork.nodes.find(n => n.id === id);
+                        if (nodeData) {
+                            nodeData.metrics = change.metrics;
+
+                            // Determine if it's a cluster node (has white fill)
+                            const isCluster = circle.attr('fill') === 'white';
+                            const newColor = self.getColorForMetric(change.metrics);
+
+                            // Update visual appearance
+                            circle.transition()
+                                .duration(750)
+                                .style('fill', isCluster ? 'white' : newColor)
+                                .style('stroke', newColor);
+                        }
+                    }
+                }
+            });
+        });
+
+        // Update links
+        Object.entries(updates.changes.links || {}).forEach(([id, change]) => {
+            const [source, target] = id.split('->');
+
+            // Find and update the link data
+            const linkData = this.currentNetwork.links.find(
+                l => l.source === source && l.target === target
+            );
+
+            if (linkData) {
+                // Update the stored data and get new color
+                linkData.metrics = change.metrics;
+                const newColor = self.getColorForMetric(change.metrics);
+
+                // Select and update both the line and arrow elements
+                const line = d3.select(`line.link-half[source="${source}"][target="${target}"]`);
+                const arrow = d3.select(`path.link-half[source="${source}"][target="${target}"]`);
+
+                line.attr('stroke', newColor);
+                arrow.attr('fill', newColor);
+
+                // Update details panel if this is the selected link
+                if (this.selectedElement) {
+                    // Get the parent group of the selected element
+                    const selectedGroup = this.selectedElement.closest('g');
+                    const selectedLine = selectedGroup.querySelector('line.link-half');
+
+                    if (selectedLine) {
+                        const selectedSource = selectedLine.getAttribute('source');
+                        const selectedTarget = selectedLine.getAttribute('target');
+
+                        console.log('Checking selected link:', { selectedSource, selectedTarget, source, target });
+
+                        if (selectedSource === source && selectedTarget === target) {
+                            console.log('Match found, updating panel with:', { ...linkData.metrics.current });
+                            this.detailsPanelManager.updateLinkDetails(linkData);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // New method to register update callbacks
+    onUpdate(callback) {
+        this.updateCallbacks.add(callback);
+        return () => this.updateCallbacks.delete(callback);
+    }
+
 
     setupNavigationBar() {
         const container = document.querySelector('.visualization-container');
@@ -175,17 +340,19 @@ class NetworkVisualizer {
         };
 
         // Calculate node statistics
-        stats.avgAllocation.nodes = network.nodes.reduce((sum, node) => sum + node.allocation, 0) / stats.totalNodes;
-        stats.maxAllocation.nodes = Math.max(...network.nodes.map(node => node.allocation));
+        const nodeAllocations = network.nodes.map(node => node.metrics?.current?.allocation ?? 0);
+        stats.avgAllocation.nodes = nodeAllocations.reduce((sum, val) => sum + val, 0) / stats.totalNodes;
+        stats.maxAllocation.nodes = Math.max(...nodeAllocations);
         stats.criticalResources.nodes = network.nodes
-            .filter(node => node.allocation > 75)
+            .filter(node => (node.metrics?.current?.allocation ?? 0) > 75)
             .map(node => node.id);
 
         // Calculate link statistics
-        stats.avgAllocation.links = network.links.reduce((sum, link) => sum + link.allocation, 0) / stats.totalLinks;
-        stats.maxAllocation.links = Math.max(...network.links.map(link => link.allocation));
+        const linkAllocations = network.links.map(link => link.metrics?.current?.allocation ?? 0);
+        stats.avgAllocation.links = linkAllocations.reduce((sum, val) => sum + val, 0) / stats.totalLinks;
+        stats.maxAllocation.links = Math.max(...linkAllocations);
         stats.criticalResources.links = network.links
-            .filter(link => link.allocation > 75)
+            .filter(link => (link.metrics?.current?.allocation ?? 0) > 75)
             .map(link => `${link.source}->${link.target}`);
 
         return stats;
@@ -217,7 +384,8 @@ class NetworkVisualizer {
         this.updateDetailsWithNetworkOverview();
     }
 
-    getColorForAllocation(allocation) {
+    getColorForAllocation(metrics) {
+        const allocation = metrics?.current?.allocation ?? 0;
         const range = this.config.colors.ranges.find(r => allocation <= r.max);
         return range ? range.color : this.config.colors.ranges[this.config.colors.ranges.length - 1].color;
     }
@@ -234,10 +402,10 @@ class NetworkVisualizer {
         const cos60 = Math.cos(Math.PI / 3);
         const sin60 = Math.sin(Math.PI / 3);
 
-        const leftX = x - height * unitX + arrowSize/2 * (-unitX * cos60 + unitY * sin60);
-        const leftY = y - height * unitY + arrowSize/2 * (-unitY * cos60 - unitX * sin60);
-        const rightX = x - height * unitX + arrowSize/2 * (-unitX * cos60 - unitY * sin60);
-        const rightY = y - height * unitY + arrowSize/2 * (-unitY * cos60 + unitX * sin60);
+        const leftX = x - height * unitX + arrowSize / 2 * (-unitX * cos60 + unitY * sin60);
+        const leftY = y - height * unitY + arrowSize / 2 * (-unitY * cos60 - unitX * sin60);
+        const rightX = x - height * unitX + arrowSize / 2 * (-unitX * cos60 - unitY * sin60);
+        const rightY = y - height * unitY + arrowSize / 2 * (-unitY * cos60 + unitX * sin60);
 
         return {
             point: [x, y],
@@ -322,22 +490,26 @@ class NetworkVisualizer {
 
         const linkLine = document.createElementNS(svgNS, "line");
         linkLine.setAttribute("class", "link-half");
+        linkLine.setAttribute("source", link.source);  // Add this
+        linkLine.setAttribute("target", link.target);  // Add this
         linkLine.setAttribute("x1", startX);
         linkLine.setAttribute("y1", startY);
         linkLine.setAttribute("x2", arrow.base[0]);
         linkLine.setAttribute("y2", arrow.base[1]);
-        linkLine.setAttribute("stroke", this.getColorForAllocation(link.allocation));
+        linkLine.setAttribute("stroke", this.getColorForAllocation(link.metrics));
         linkLine.setAttribute("stroke-width", this.config.links.width);
 
         const arrowHead = document.createElementNS(svgNS, "path");
         arrowHead.setAttribute("class", "link-half");
+        arrowHead.setAttribute("source", link.source);  // Add this
+        arrowHead.setAttribute("target", link.target);  // Add this
         arrowHead.setAttribute("d", `
             M${arrow.left[0]},${arrow.left[1]}
             L${arrow.point[0]},${arrow.point[1]}
             L${arrow.right[0]},${arrow.right[1]}
             Z
         `);
-        arrowHead.setAttribute("fill", this.getColorForAllocation(link.allocation));
+        arrowHead.setAttribute("fill", this.getColorForAllocation(link.metrics));
         arrowHead.setAttribute("stroke", "none");
 
         const handleClick = (event) => {
@@ -373,7 +545,7 @@ class NetworkVisualizer {
         tooltip.innerHTML = `
             <strong>Node ${d.id}</strong><br>
             Type: ${d.type}<br>
-            Resource Allocation: ${d.allocation}%
+            Resource Allocation: ${(d.metrics?.current?.allocation ?? 0).toFixed(2)}%
             ${d.type === "cluster" ? "<br>(Click to explore)" : ""}
         `;
         tooltip.style.left = (event.pageX + 10) + "px";
@@ -385,8 +557,8 @@ class NetworkVisualizer {
         const tooltip = document.getElementById("tooltip");
         tooltip.innerHTML = `
             <strong>${d.source} → ${d.target}</strong><br>
-            Allocation: ${d.allocation}%<br>
-            Capacity: ${d.capacity}
+            Allocation: ${(d.metrics?.current?.allocation ?? 0).toFixed(2)}%<br>
+            Capacity: ${d.metrics?.current?.capacity ?? 'N/A'}
         `;
         tooltip.style.left = (event.pageX + 10) + "px";
         tooltip.style.top = (event.pageY - 10) + "px";
@@ -409,9 +581,18 @@ class NetworkVisualizer {
         }
 
         if (type === 'node') {
-            this.detailsPanelManager.updateNodeDetails(data);
+            const nodeDetails = {
+                ...data,
+                allocation: data.metrics?.current?.allocation ?? 0
+            };
+            this.detailsPanelManager.updateNodeDetails(nodeDetails);
         } else if (type === 'link') {
-            this.detailsPanelManager.updateLinkDetails(data);
+            const linkDetails = {
+                ...data,
+                allocation: data.metrics?.current?.allocation ?? 0,
+                capacity: data.metrics?.current?.capacity ?? 'N/A'
+            };
+            this.detailsPanelManager.updateLinkDetails(linkDetails);
         }
     }
 
@@ -501,8 +682,9 @@ class NetworkVisualizer {
 
             const circle = document.createElementNS(svgNS, "circle");
             circle.setAttribute("r", this.calculateNodeRadius(node));
-            circle.setAttribute("fill", node.type === "cluster" ? "white" : this.getColorForAllocation(node.allocation));
-            circle.setAttribute("stroke", this.getColorForAllocation(node.allocation));
+            circle.setAttribute("fill", node.type === "cluster" ? "white" :
+                this.getColorForAllocation(node.metrics));
+            circle.setAttribute("stroke", this.getColorForAllocation(node.metrics));
             circle.setAttribute("stroke-width", node.type === "cluster"
                 ? this.config.nodes.cluster.strokeWidth
                 : this.config.nodes.leaf.strokeWidth);
@@ -556,6 +738,7 @@ class NetworkVisualizer {
     }
 
 
+    // Update existing loadNetwork method to handle dynamic updates
     async loadNetwork(networkId) {
         try {
             this.cleanup();
@@ -564,18 +747,34 @@ class NetworkVisualizer {
                 throw new Error(`No data found for network: ${networkId}`);
             }
 
+            // Store current network data
+            this.currentNetwork = networkData;
+
             // Update network path
             this.updateNetworkPath(networkId);
 
+            // Create visualization
             await this.createVisualization(networkData);
 
+            // Update URL
             const url = new URL(window.location);
             url.searchParams.set("network", networkId);
             window.history.pushState({}, "", url);
+
+            // Start dynamic updates
+            this.startDynamicUpdates(networkId);
+
+            console.log(`Network ${networkId} loaded and updates started`);
         } catch (error) {
             console.error("Error loading network data:", error);
             throw error;
         }
+    }
+
+    // New method to fetch network updates
+    async fetchNetworkUpdates(networkId) {
+        // This should be implemented based on your backend API
+        throw new Error('fetchNetworkUpdates must be implemented');
     }
 
     async fetchNetworkData(networkId) {

@@ -1,10 +1,10 @@
-<!-- index.html (real backend) -->
+<!-- index-mock.html (mock data) -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Network Visualization</title>
+    <title>Network Visualization (Mock Data)</title>
     <link rel="stylesheet" href="css/styles.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   </head>
@@ -23,9 +23,15 @@
       </div>
     </div>
 
+    <!-- Set mock data flag before loading any scripts -->
+    <script>
+      window.USE_MOCK_DATA = true;
+    </script>
+
     <script src="js/DetailsPanelManager.js"></script>
     <script src="js/NetworkStats.js"></script>
     <script src="js/NetworkVisualizer.js"></script>
+    <script src="js/MockNetworkDataGenerator.js"></script>
     <script src="js/init.js"></script>
   </body>
 </html>

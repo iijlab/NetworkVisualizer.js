@@ -1,50 +1,95 @@
 {
   "metadata": {
     "id": "A",
-    "parentNetwork": "root"
+    "parentNetwork": "root",
+    "lastUpdated": "2024-12-24T12:00:00Z",
+    "updateInterval": 5000,
+    "retentionPeriod": 3600
   },
   "nodes": [
     {
       "id": "A1",
       "x": 300,
       "y": 200,
-      "allocation": 30,
-      "type": "leaf"
+      "type": "leaf",
+      "metrics": {
+        "current": {
+          "allocation": 30,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     },
     {
       "id": "A2",
       "x": 500,
       "y": 200,
-      "allocation": 45,
       "type": "cluster",
-      "childNetwork": "A2"
+      "childNetwork": "A2",
+      "metrics": {
+        "current": {
+          "allocation": 45,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     },
     {
       "id": "A3",
       "x": 400,
       "y": 400,
-      "allocation": 60,
-      "type": "leaf"
+      "type": "leaf",
+      "metrics": {
+        "current": {
+          "allocation": 60,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     }
   ],
   "links": [
     {
       "source": "A1",
       "target": "A2",
-      "allocation": 40,
-      "capacity": "100 units"
+      "metrics": {
+        "current": {
+          "allocation": 40,
+          "capacity": 100,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     },
     {
       "source": "A2",
       "target": "A3",
-      "allocation": 55,
-      "capacity": "100 units"
+      "metrics": {
+        "current": {
+          "allocation": 55,
+          "capacity": 100,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     },
     {
       "source": "A3",
       "target": "A1",
-      "allocation": 65,
-      "capacity": "100 units"
+      "metrics": {
+        "current": {
+          "allocation": 65,
+          "capacity": 100,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     }
   ]
 }

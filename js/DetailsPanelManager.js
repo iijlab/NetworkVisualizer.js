@@ -1,21 +1,24 @@
 class DetailsPanelManager {
-    constructor(panelElement) {
+    constructor(panelElement, config) {
         this.panel = panelElement;
+        this.config = config;
         this.contentElement = this.panel.querySelector('.details-content');
         this.setupLegend();
     }
 
     setupLegend() {
-        // First check if legend already exists to avoid duplicates
         if (this.panel.querySelector('.details-legend')) {
             return;
         }
 
-        // Create the legend element
         const legendDiv = document.createElement('div');
         legendDiv.className = 'details-legend';
+
+        const metricName = this.config.visualization.metric;
+        const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
+
         legendDiv.innerHTML = `
-            <h3 style="margin-bottom: 10px; font-weight: 600;">Resource Allocation</h3>
+            <h3 style="margin-bottom: 10px; font-weight: 600;">${metricTitle}</h3>
             <div class="legend-items">
                 <div class="legend-item">
                     <div class="legend-color" style="background: #006994"></div>
@@ -40,21 +43,13 @@ class DetailsPanelManager {
             </div>
         `;
 
-        // Make sure we append after the content element
         this.contentElement.insertAdjacentElement('afterend', legendDiv);
-
-        // Debug log
-        console.log('Legend added to panel:', this.panel.contains(legendDiv));
-    }
-
-    clearSelection() {
-        if (this.onSelectionCleared) {
-            this.onSelectionCleared();
-        }
     }
 
     updateNetworkOverview(network) {
         const stats = NetworkStats.calculate(network);
+        const metricName = this.config.visualization.metric;
+        const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
 
         this.contentElement.innerHTML = `
             <div class="detail-section">
@@ -75,27 +70,27 @@ class DetailsPanelManager {
                 </table>
             </div>
             <div class="detail-section">
-                <h3>Resource Allocation Summary</h3>
+                <h3>${metricTitle} Summary</h3>
                 <table>
                     <tr>
-                        <td>Avg Node Allocation:</td>
-                        <td>${stats.avgAllocation.nodes.toFixed(1)}%</td>
+                        <td>Avg Node ${metricTitle}:</td>
+                        <td>${stats.avgMetric.nodes.toFixed(2)}%</td>
                     </tr>
                     <tr>
-                        <td>Max Node Allocation:</td>
-                        <td>${stats.maxAllocation.nodes.toFixed(1)}%</td>
+                        <td>Max Node ${metricTitle}:</td>
+                        <td>${stats.maxMetric.nodes.toFixed(2)}%</td>
                     </tr>
                     <tr>
-                        <td>Avg Link Allocation:</td>
-                        <td>${stats.avgAllocation.links.toFixed(1)}%</td>
+                        <td>Avg Link ${metricTitle}:</td>
+                        <td>${stats.avgMetric.links.toFixed(2)}%</td>
                     </tr>
                     <tr>
-                        <td>Max Link Allocation:</td>
-                        <td>${stats.maxAllocation.links.toFixed(1)}%</td>
+                        <td>Max Link ${metricTitle}:</td>
+                        <td>${stats.maxMetric.links.toFixed(2)}%</td>
                     </tr>
                 </table>
             </div>
-            ${this.renderCriticalResources(stats)}
+            ${this.renderCriticalMetrics(stats)}
         `;
     }
 
@@ -109,6 +104,8 @@ class DetailsPanelManager {
 
     updateClusterDetails(node, clusterNetwork) {
         const stats = NetworkStats.calculate(clusterNetwork);
+        const metricName = this.config.visualization.metric;
+        const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
 
         this.contentElement.innerHTML = `
             <div class="detail-section">
@@ -119,8 +116,8 @@ class DetailsPanelManager {
                         <td>${node.id}</td>
                     </tr>
                     <tr>
-                        <td>Current Allocation:</td>
-                        <td>${node.allocation}%</td>
+                        <td>Current ${metricTitle}:</td>
+                        <td>${node.metrics.current[metricName].toFixed(2)}%</td>
                     </tr>
                     <tr>
                         <td>Contained Nodes:</td>
@@ -133,31 +130,35 @@ class DetailsPanelManager {
                 </table>
             </div>
             <div class="detail-section">
-                <h3>Cluster Resource Summary</h3>
+                <h3>Cluster ${metricTitle} Summary</h3>
                 <table>
                     <tr>
-                        <td>Avg Node Allocation:</td>
-                        <td>${stats.avgAllocation.nodes.toFixed(1)}%</td>
+                        <td>Avg Node ${metricTitle}:</td>
+                        <td>${stats.avgMetric.nodes.toFixed(2)}%</td>
                     </tr>
                     <tr>
-                        <td>Max Node Allocation:</td>
-                        <td>${stats.maxAllocation.nodes.toFixed(1)}%</td>
+                        <td>Max Node ${metricTitle}:</td>
+                        <td>${stats.maxMetric.nodes.toFixed(2)}%</td>
                     </tr>
                     <tr>
-                        <td>Avg Link Allocation:</td>
-                        <td>${stats.avgAllocation.links.toFixed(1)}%</td>
+                        <td>Avg Link ${metricTitle}:</td>
+                        <td>${stats.avgMetric.links.toFixed(2)}%</td>
                     </tr>
                     <tr>
-                        <td>Max Link Allocation:</td>
-                        <td>${stats.maxAllocation.links.toFixed(1)}%</td>
+                        <td>Max Link ${metricTitle}:</td>
+                        <td>${stats.maxMetric.links.toFixed(2)}%</td>
                     </tr>
                 </table>
             </div>
-            ${this.renderCriticalResources(stats)}
+            ${this.renderCriticalMetrics(stats)}
         `;
     }
 
+
     updateLeafNodeDetails(node) {
+        const metricName = this.config.visualization.metric;
+        const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
+
         this.contentElement.innerHTML = `
             <div class="detail-section">
                 <h3>Node Information</h3>
@@ -171,21 +172,24 @@ class DetailsPanelManager {
                         <td>${node.type}</td>
                     </tr>
                     <tr>
-                        <td>Allocation:</td>
-                        <td>${node.allocation}%</td>
+                        <td>${metricTitle}:</td>
+                        <td>${node.metrics.current[metricName].toFixed(2)}%</td>
                     </tr>
                 </table>
             </div>
             <div class="detail-section">
-                <h3>Historical Allocation</h3>
+                <h3>Historical ${metricTitle}</h3>
                 <div class="chart-container">
-                    [Historical allocation chart placeholder]
+                    [Historical ${metricTitle.toLowerCase()} chart placeholder]
                 </div>
             </div>
         `;
     }
 
     updateLinkDetails(link) {
+        const metricName = this.config.visualization.metric;
+        const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
+
         this.contentElement.innerHTML = `
             <div class="detail-section">
                 <h3>Link Information</h3>
@@ -199,43 +203,40 @@ class DetailsPanelManager {
                         <td>${link.target}</td>
                     </tr>
                     <tr>
-                        <td>Allocation:</td>
-                        <td>${link.allocation}%</td>
+                        <td>${metricTitle}:</td>
+                        <td>${link.metrics.current[metricName].toFixed(2)}%</td>
                     </tr>
                     <tr>
                         <td>Capacity:</td>
-                        <td>${link.capacity}</td>
+                        <td>${link.metrics.current.capacity}</td>
                     </tr>
                 </table>
             </div>
             <div class="detail-section">
-                <h3>Bandwidth Usage</h3>
+                <h3>${metricTitle} History</h3>
                 <div class="chart-container">
-                    [Bandwidth usage chart placeholder]
-                </div>
-            </div>
-            <div class="detail-section">
-                <h3>Link Quality</h3>
-                <div class="chart-container">
-                    [Link quality metrics placeholder]
+                    [${metricTitle} history chart placeholder]
                 </div>
             </div>
         `;
     }
 
-    renderCriticalResources(stats) {
-        if (!stats.criticalResources.nodes.length && !stats.criticalResources.links.length) {
+    renderCriticalMetrics(stats) {
+        if (!stats.criticalMetrics.nodes.length && !stats.criticalMetrics.links.length) {
             return '';
         }
 
+        const metricTitle = this.config.visualization.metric.charAt(0).toUpperCase() +
+            this.config.visualization.metric.slice(1);
+
         return `
             <div class="detail-section">
-                <h3>Critical Resources (>75% allocated)</h3>
-                ${stats.criticalResources.nodes.length ? `
-                    <p><strong>Nodes:</strong> ${stats.criticalResources.nodes.join(', ')}</p>
+                <h3>Critical ${metricTitle} Elements (>75%)</h3>
+                ${stats.criticalMetrics.nodes.length ? `
+                    <p><strong>Nodes:</strong> ${stats.criticalMetrics.nodes.join(', ')}</p>
                 ` : ''}
-                ${stats.criticalResources.links.length ? `
-                    <p><strong>Links:</strong> ${stats.criticalResources.links.join(', ')}</p>
+                ${stats.criticalMetrics.links.length ? `
+                    <p><strong>Links:</strong> ${stats.criticalMetrics.links.join(', ')}</p>
                 ` : ''}
             </div>
         `;

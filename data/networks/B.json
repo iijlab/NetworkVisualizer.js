@@ -1,48 +1,95 @@
 {
+  "metadata": {
+    "id": "B",
+    "parentNetwork": "root",
+    "lastUpdated": "2024-12-24T12:00:00Z",
+    "updateInterval": 5000,
+    "retentionPeriod": 3600
+  },
   "nodes": [
     {
       "id": "B1",
       "x": 300,
       "y": 200,
-      "allocation": 25,
-      "type": "leaf"
+      "type": "leaf",
+      "metrics": {
+        "current": {
+          "allocation": 25,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     },
     {
       "id": "B2",
       "x": 500,
       "y": 200,
-      "allocation": 55,
-      "type": "leaf"
+      "type": "leaf",
+      "metrics": {
+        "current": {
+          "allocation": 55,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     },
     {
       "id": "B3",
       "x": 400,
       "y": 400,
-      "allocation": 40,
       "type": "cluster",
-      "childNetwork": "B3"
+      "childNetwork": "B3",
+      "metrics": {
+        "current": {
+          "allocation": 40,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     }
   ],
   "links": [
     {
       "source": "B1",
       "target": "B2",
-      "allocation": 35,
-      "capacity": "100 units"
+      "metrics": {
+        "current": {
+          "allocation": 35,
+          "capacity": 100,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     },
     {
       "source": "B2",
       "target": "B3",
-      "allocation": 45,
-      "capacity": "100 units"
+      "metrics": {
+        "current": {
+          "allocation": 45,
+          "capacity": 100,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     },
     {
       "source": "B3",
       "target": "B1",
-      "allocation": 60,
-      "capacity": "100 units"
+      "metrics": {
+        "current": {
+          "allocation": 60,
+          "capacity": 100,
+          "timestamp": "2024-12-24T12:00:00Z"
+        },
+        "history": [],
+        "alerts": []
+      }
     }
-  ],
-  "parentNetwork": "root",
-  "networkId": "B"
+  ]
 }

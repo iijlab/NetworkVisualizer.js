@@ -13,7 +13,8 @@
     "width": 5,
     "arrowSize": 5
   },
-  "colors": {
+  "visualization": {
+    "metric": "allocation",
     "ranges": [
       { "max": 0, "color": "#006994" },
       { "max": 45, "color": "#4CAF50" },
