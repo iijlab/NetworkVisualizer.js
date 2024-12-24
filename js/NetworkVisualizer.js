@@ -34,7 +34,7 @@ class NetworkVisualizer {
         this.detailsPanel.classList.remove('hidden'); // Always show panel
 
         // Create the details panel manager
-        this.detailsPanelManager = new DetailsPanelManager(this.detailsPanel);
+        this.detailsPanelManager = new DetailsPanelManager(this.detailsPanel, this.config);
 
         // Initialize network path
         this.networkPath = [];

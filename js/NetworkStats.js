@@ -5,33 +5,33 @@ class NetworkStats {
             clusterNodes: network.nodes.filter(n => n.type === 'cluster').length,
             leafNodes: network.nodes.filter(n => n.type === 'leaf').length,
             totalLinks: network.links.length,
-            avgAllocation: {
+            avgMetric: {
                 nodes: 0,
                 links: 0
             },
-            maxAllocation: {
+            maxMetric: {
                 nodes: 0,
                 links: 0
             },
-            criticalResources: {
+            criticalMetrics: {
                 nodes: [],
                 links: []
             }
         };
 
         // Calculate node statistics
-        const nodeAllocations = network.nodes.map(node => node.metrics?.current?.allocation ?? 0);
-        stats.avgAllocation.nodes = nodeAllocations.reduce((sum, val) => sum + val, 0) / stats.totalNodes;
-        stats.maxAllocation.nodes = Math.max(...nodeAllocations);
-        stats.criticalResources.nodes = network.nodes
+        const nodeMetrics = network.nodes.map(node => node.metrics?.current?.allocation ?? 0);
+        stats.avgMetric.nodes = nodeMetrics.reduce((sum, val) => sum + val, 0) / stats.totalNodes;
+        stats.maxMetric.nodes = Math.max(...nodeMetrics);
+        stats.criticalMetrics.nodes = network.nodes
             .filter(node => (node.metrics?.current?.allocation ?? 0) > 75)
             .map(node => node.id);
 
         // Calculate link statistics
-        const linkAllocations = network.links.map(link => link.metrics?.current?.allocation ?? 0);
-        stats.avgAllocation.links = linkAllocations.reduce((sum, val) => sum + val, 0) / stats.totalLinks;
-        stats.maxAllocation.links = Math.max(...linkAllocations);
-        stats.criticalResources.links = network.links
+        const linkMetrics = network.links.map(link => link.metrics?.current?.allocation ?? 0);
+        stats.avgMetric.links = linkMetrics.reduce((sum, val) => sum + val, 0) / stats.totalLinks;
+        stats.maxMetric.links = Math.max(...linkMetrics);
+        stats.criticalMetrics.links = network.links
             .filter(link => (link.metrics?.current?.allocation ?? 0) > 75)
             .map(link => `${link.source}->${link.target}`);
 
