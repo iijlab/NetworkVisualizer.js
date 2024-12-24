@@ -1,3 +1,5 @@
+// init.js
+
 // Cache for loaded network data
 const networkCache = new Map();
 
@@ -35,7 +37,8 @@ async function initializeVisualizer() {
                     width: 5,
                     arrowSize: 5
                 },
-                colors: {
+                visualization: {
+                    metric: "allocation",
                     ranges: [
                         { max: 0, color: "#006994" },
                         { max: 45, color: "#4CAF50" },
@@ -55,36 +58,42 @@ async function initializeVisualizer() {
 
         // Create visualizer instance
         const visualizer = new NetworkVisualizer("#network", config);
+        let updateInterval = null;
 
         if (useMockData) {
-            // Setup mock data generator and override fetchNetworkData
-            visualizer.mockDataGenerator = new MockNetworkDataGenerator(
-                await fetch('data/networks/root.json').then(r => r.json()),
-                { updateInterval: 5000 }
-            );
+            // Load root network data
+            const rootNetworkResponse = await fetch('data/networks/root.json');
+            const rootNetwork = await rootNetworkResponse.json();
 
+            // Ensure metadata has update interval
+            if (!rootNetwork.metadata) {
+                rootNetwork.metadata = {};
+            }
+            rootNetwork.metadata.updateInterval = 2000; // 2 seconds
+
+            // Create mock data generator
+            const mockGenerator = new MockNetworkDataGenerator(rootNetwork, {
+                updateInterval: rootNetwork.metadata.updateInterval,
+                metricName: config.visualization.metric
+            });
+
+            visualizer.mockDataGenerator = mockGenerator;
+
+            // Override fetch methods for mock data
             visualizer.fetchNetworkData = async (networkId) => {
-                // Check cache first
-                if (networkCache.has(networkId)) {
-                    return networkCache.get(networkId);
-                }
-
                 try {
-                    // Load initial data from static JSON
                     const response = await fetch(`data/networks/${networkId}.json`);
                     if (!response.ok) {
                         throw new Error(`Failed to load network data: ${response.statusText}`);
                     }
-
                     let networkData = await response.json();
 
-                    // Convert to new format with metrics if needed
+                    // Ensure metadata has update interval for all networks
                     if (!networkData.metadata) {
-                        networkData = convertToNewFormat(networkData);
+                        networkData.metadata = {};
                     }
+                    networkData.metadata.updateInterval = 2000; // 2 seconds
 
-                    // Cache the data
-                    networkCache.set(networkId, networkData);
                     return networkData;
                 } catch (error) {
                     console.error(`Error loading network ${networkId}:`, error);
@@ -92,21 +101,35 @@ async function initializeVisualizer() {
                 }
             };
 
-            // Override fetchNetworkUpdates to use mock generator
-            visualizer.fetchNetworkUpdates = async (networkId) => {
-                return visualizer.mockDataGenerator.generateUpdate();
+            visualizer.startDynamicUpdates = (networkId) => {
+                if (updateInterval) {
+                    clearInterval(updateInterval);
+                }
+
+                console.log('Starting dynamic updates...');
+
+                updateInterval = setInterval(() => {
+                    const updates = mockGenerator.generateUpdate();
+                    console.log('Generated update:', updates);
+                    visualizer.applyNetworkUpdates(updates);
+                }, 2000);  // Update every 2 seconds
+            };
+
+            visualizer.stopDynamicUpdates = () => {
+                if (updateInterval) {
+                    clearInterval(updateInterval);
+                    updateInterval = null;
+                }
             };
         } else {
             // Real backend implementation
             visualizer.fetchNetworkData = async (networkId) => {
-                // Your real backend fetch implementation
                 const response = await fetch(`/api/networks/${networkId}`);
                 if (!response.ok) throw new Error('Network fetch failed');
                 return response.json();
             };
 
             visualizer.fetchNetworkUpdates = async (networkId) => {
-                // Your real backend updates implementation
                 const response = await fetch(`/api/networks/${networkId}/updates`);
                 if (!response.ok) throw new Error('Updates fetch failed');
                 return response.json();
@@ -127,44 +150,6 @@ async function initializeVisualizer() {
         console.error('Error initializing visualizer:', error);
         alert(`Error initializing visualization: ${error.message}`);
     }
-}
-
-// Helper function to convert old format to new format with metrics
-function convertToNewFormat(oldData) {
-    const timestamp = new Date().toISOString();
-
-    return {
-        metadata: {
-            id: oldData.networkId || oldData.id,
-            parentNetwork: oldData.parentNetwork,
-            lastUpdated: timestamp,
-            updateInterval: 5000,
-            retentionPeriod: 3600
-        },
-        nodes: oldData.nodes.map(node => ({
-            ...node,
-            metrics: {
-                current: {
-                    allocation: node.allocation,
-                    timestamp: timestamp
-                },
-                history: [],
-                alerts: []
-            }
-        })),
-        links: oldData.links.map(link => ({
-            ...link,
-            metrics: {
-                current: {
-                    allocation: link.allocation,
-                    capacity: link.capacity,
-                    timestamp: timestamp
-                },
-                history: [],
-                alerts: []
-            }
-        }))
-    };
 }
 
 // Initialize when DOM is ready
