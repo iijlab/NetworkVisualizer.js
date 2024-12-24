@@ -40,6 +40,16 @@ class NetworkVisualizer {
         this.networkPath = [];
         this.setupNavigationBar();
 
+        // Properties for dynamic updates
+        this.updateInterval = null;
+        this.lastUpdate = null;
+        this.dataCache = new Map();
+        this.updateCallbacks = new Set();
+        this.transitions = {
+            duration: 750,
+            ease: d3.easeCubic
+        };
+
         // Add click handler to the container for blank space clicks
         const container = document.querySelector(this.containerId);
         container.addEventListener('click', (event) => {
@@ -49,6 +59,111 @@ class NetworkVisualizer {
             }
         });
     }
+
+    // New method to start dynamic updates
+    startDynamicUpdates(networkId) {
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+        }
+
+        const network = this.dataCache.get(networkId);
+        if (!network?.metadata?.updateInterval) {
+            console.warn('No update interval specified for network:', networkId);
+            return;
+        }
+
+        this.updateInterval = setInterval(async () => {
+            await this.fetchAndApplyUpdates(networkId);
+        }, network.metadata.updateInterval);
+    }
+
+    // New method to fetch and apply updates
+    async fetchAndApplyUpdates(networkId) {
+        try {
+            const updates = await this.fetchNetworkUpdates(networkId);
+            if (!updates) return;
+
+            this.applyNetworkUpdates(updates);
+            this.lastUpdate = updates.timestamp;
+        } catch (error) {
+            console.error('Error fetching network updates:', error);
+        }
+    }
+
+    // New method to apply updates with animations
+    applyNetworkUpdates(updates) {
+        const svg = d3.select(this.containerId);
+
+        // Update nodes
+        Object.entries(updates.changes.nodes || {}).forEach(([id, metrics]) => {
+            const nodeGroup = svg.select(`.node[data-id="${id}"]`);
+            if (!nodeGroup.empty()) {
+                // Update node color based on new allocation
+                const node = nodeGroup.select('circle');
+                node.transition()
+                    .duration(this.transitions.duration)
+                    .ease(this.transitions.ease)
+                    .style('fill', d => metrics.allocation ?
+                        this.getColorForAllocation(metrics.allocation) :
+                        node.style('fill'));
+
+                // Update node data
+                const nodeData = this.currentNetwork.nodes.find(n => n.id === id);
+                if (nodeData) {
+                    nodeData.metrics.current = {
+                        allocation: metrics.allocation,
+                        timestamp: updates.timestamp
+                    };
+                    nodeData.metrics.history.unshift(nodeData.metrics.current);
+                    nodeData.metrics.alerts = metrics.alerts || [];
+                }
+            }
+        });
+
+        // Update links
+        Object.entries(updates.changes.links || {}).forEach(([id, metrics]) => {
+            const [source, target] = id.split('->');
+            const linkGroup = svg.select(`.link[data-source="${source}"][data-target="${target}"]`);
+            if (!linkGroup.empty()) {
+                // Update link color and width based on new allocation
+                const link = linkGroup.select('.link-half');
+                link.transition()
+                    .duration(this.transitions.duration)
+                    .ease(this.transitions.ease)
+                    .style('stroke', this.getColorForAllocation(metrics.allocation));
+
+                // Update link data
+                const linkData = this.currentNetwork.links.find(
+                    l => l.source === source && l.target === target
+                );
+                if (linkData) {
+                    linkData.metrics.current = {
+                        allocation: metrics.allocation,
+                        capacity: metrics.capacity || linkData.metrics.current.capacity,
+                        timestamp: updates.timestamp
+                    };
+                    linkData.metrics.history.unshift(linkData.metrics.current);
+                    linkData.metrics.alerts = metrics.alerts || [];
+                }
+            }
+        });
+
+        // Update details panel if needed
+        if (this.selectedElement) {
+            this.updateDetailsPanel(this.selectedElement.__data__,
+                this.selectedElement.classList.contains('node') ? 'node' : 'link');
+        }
+
+        // Notify callbacks
+        this.updateCallbacks.forEach(callback => callback(updates));
+    }
+
+    // New method to register update callbacks
+    onUpdate(callback) {
+        this.updateCallbacks.add(callback);
+        return () => this.updateCallbacks.delete(callback);
+    }
+
 
     setupNavigationBar() {
         const container = document.querySelector('.visualization-container');
@@ -234,10 +349,10 @@ class NetworkVisualizer {
         const cos60 = Math.cos(Math.PI / 3);
         const sin60 = Math.sin(Math.PI / 3);
 
-        const leftX = x - height * unitX + arrowSize/2 * (-unitX * cos60 + unitY * sin60);
-        const leftY = y - height * unitY + arrowSize/2 * (-unitY * cos60 - unitX * sin60);
-        const rightX = x - height * unitX + arrowSize/2 * (-unitX * cos60 - unitY * sin60);
-        const rightY = y - height * unitY + arrowSize/2 * (-unitY * cos60 + unitX * sin60);
+        const leftX = x - height * unitX + arrowSize / 2 * (-unitX * cos60 + unitY * sin60);
+        const leftY = y - height * unitY + arrowSize / 2 * (-unitY * cos60 - unitX * sin60);
+        const rightX = x - height * unitX + arrowSize / 2 * (-unitX * cos60 - unitY * sin60);
+        const rightY = y - height * unitY + arrowSize / 2 * (-unitY * cos60 + unitX * sin60);
 
         return {
             point: [x, y],
@@ -556,6 +671,7 @@ class NetworkVisualizer {
     }
 
 
+    // Update existing loadNetwork method to handle dynamic updates
     async loadNetwork(networkId) {
         try {
             this.cleanup();
@@ -567,15 +683,26 @@ class NetworkVisualizer {
             // Update network path
             this.updateNetworkPath(networkId);
 
+            // Create visualization
             await this.createVisualization(networkData);
 
+            // Update URL
             const url = new URL(window.location);
             url.searchParams.set("network", networkId);
             window.history.pushState({}, "", url);
+
+            // Start dynamic updates after visualization is created
+            this.startDynamicUpdates(networkId);
         } catch (error) {
             console.error("Error loading network data:", error);
             throw error;
         }
+    }
+
+    // New method to fetch network updates
+    async fetchNetworkUpdates(networkId) {
+        // This should be implemented based on your backend API
+        throw new Error('fetchNetworkUpdates must be implemented');
     }
 
     async fetchNetworkData(networkId) {

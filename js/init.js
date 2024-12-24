@@ -1,71 +1,117 @@
 // Cache for loaded network data
 const networkCache = new Map();
 
+// Function to detect if we should use mock data
+function shouldUseMockData() {
+    // First check for window level configuration
+    if (typeof window.USE_MOCK_DATA !== 'undefined') {
+        return window.USE_MOCK_DATA;
+    }
+
+    // Then check for data-mock-data attribute on script tag
+    const scriptTag = document.querySelector('script[data-mock-data]');
+    if (scriptTag) {
+        return scriptTag.getAttribute('data-mock-data') === 'true';
+    }
+
+    return false;
+}
+
 async function initializeVisualizer() {
     try {
+        // Determine if we should use mock data
+        const useMockData = shouldUseMockData();
+        console.log(`Initializing with ${useMockData ? 'mock' : 'real'} data`);
+
         // Load configuration
-        const configResponse = await fetch('data/config.json');
-        if (!configResponse.ok) {
-            throw new Error(`Failed to load config: ${configResponse.statusText}`);
+        let config;
+        if (useMockData) {
+            config = {
+                nodes: {
+                    leaf: { radius: 8, strokeWidth: 2 },
+                    cluster: { radius: 12, strokeWidth: 3 }
+                },
+                links: {
+                    width: 5,
+                    arrowSize: 5
+                },
+                colors: {
+                    ranges: [
+                        { max: 0, color: "#006994" },
+                        { max: 45, color: "#4CAF50" },
+                        { max: 55, color: "#FFC107" },
+                        { max: 75, color: "#FF9800" },
+                        { max: 100, color: "#f44336" }
+                    ]
+                }
+            };
+        } else {
+            const configResponse = await fetch('data/config.json');
+            if (!configResponse.ok) {
+                throw new Error(`Failed to load config: ${configResponse.statusText}`);
+            }
+            config = await configResponse.json();
         }
-        const config = await configResponse.json();
 
         // Create visualizer instance
         const visualizer = new NetworkVisualizer("#network", config);
 
-        // Override the fetchNetworkData method to load from JSON files
-        visualizer.fetchNetworkData = async (networkId) => {
-            // Check cache first
-            if (networkCache.has(networkId)) {
-                return networkCache.get(networkId);
-            }
+        if (useMockData) {
+            // Setup mock data generator and override fetchNetworkData
+            visualizer.mockDataGenerator = new MockNetworkDataGenerator(
+                await fetch('data/networks/root.json').then(r => r.json()),
+                { updateInterval: 5000 }
+            );
 
-            try {
-                console.log(`Loading network data for: ${networkId}`); // Debug log
-                const response = await fetch(`data/networks/${networkId}.json`);
-
-                if (!response.ok) {
-                    throw new Error(`Failed to load network data: ${response.statusText}`);
+            visualizer.fetchNetworkData = async (networkId) => {
+                // Check cache first
+                if (networkCache.has(networkId)) {
+                    return networkCache.get(networkId);
                 }
 
-                let networkData = await response.json();
+                try {
+                    // Load initial data from static JSON
+                    const response = await fetch(`data/networks/${networkId}.json`);
+                    if (!response.ok) {
+                        throw new Error(`Failed to load network data: ${response.statusText}`);
+                    }
 
-                // Convert old format to new format if necessary
-                if (!networkData.metadata) {
-                    console.log('Converting old format to new format'); // Debug log
-                    networkData = {
-                        metadata: {
-                            id: networkData.networkId,
-                            parentNetwork: networkData.parentNetwork
-                        },
-                        nodes: networkData.nodes,
-                        links: networkData.links
-                    };
+                    let networkData = await response.json();
+
+                    // Convert to new format with metrics if needed
+                    if (!networkData.metadata) {
+                        networkData = convertToNewFormat(networkData);
+                    }
+
+                    // Cache the data
+                    networkCache.set(networkId, networkData);
+                    return networkData;
+                } catch (error) {
+                    console.error(`Error loading network ${networkId}:`, error);
+                    throw error;
                 }
+            };
 
-                // Cache the data
-                networkCache.set(networkId, networkData);
-                console.log(`Successfully loaded network: ${networkId}`); // Debug log
+            // Override fetchNetworkUpdates to use mock generator
+            visualizer.fetchNetworkUpdates = async (networkId) => {
+                return visualizer.mockDataGenerator.generateUpdate();
+            };
+        } else {
+            // Real backend implementation
+            visualizer.fetchNetworkData = async (networkId) => {
+                // Your real backend fetch implementation
+                const response = await fetch(`/api/networks/${networkId}`);
+                if (!response.ok) throw new Error('Network fetch failed');
+                return response.json();
+            };
 
-                return networkData;
-            } catch (error) {
-                console.error(`Error loading network ${networkId}:`, error);
-                throw error;
-            }
-        };
-
-        // Add debug logging to loadNetwork
-        const originalLoadNetwork = visualizer.loadNetwork;
-        visualizer.loadNetwork = async function(networkId) {
-            console.log(`Attempting to load network: ${networkId}`); // Debug log
-            try {
-                await originalLoadNetwork.call(this, networkId);
-                console.log(`Successfully switched to network: ${networkId}`); // Debug log
-            } catch (error) {
-                console.error(`Failed to load network ${networkId}:`, error);
-                throw error;
-            }
-        };
+            visualizer.fetchNetworkUpdates = async (networkId) => {
+                // Your real backend updates implementation
+                const response = await fetch(`/api/networks/${networkId}/updates`);
+                if (!response.ok) throw new Error('Updates fetch failed');
+                return response.json();
+            };
+        }
 
         // Initialize with root network
         await visualizer.loadNetwork('root');
@@ -81,6 +127,44 @@ async function initializeVisualizer() {
         console.error('Error initializing visualizer:', error);
         alert(`Error initializing visualization: ${error.message}`);
     }
+}
+
+// Helper function to convert old format to new format with metrics
+function convertToNewFormat(oldData) {
+    const timestamp = new Date().toISOString();
+
+    return {
+        metadata: {
+            id: oldData.networkId || oldData.id,
+            parentNetwork: oldData.parentNetwork,
+            lastUpdated: timestamp,
+            updateInterval: 5000,
+            retentionPeriod: 3600
+        },
+        nodes: oldData.nodes.map(node => ({
+            ...node,
+            metrics: {
+                current: {
+                    allocation: node.allocation,
+                    timestamp: timestamp
+                },
+                history: [],
+                alerts: []
+            }
+        })),
+        links: oldData.links.map(link => ({
+            ...link,
+            metrics: {
+                current: {
+                    allocation: link.allocation,
+                    capacity: link.capacity,
+                    timestamp: timestamp
+                },
+                history: [],
+                alerts: []
+            }
+        }))
+    };
 }
 
 // Initialize when DOM is ready
