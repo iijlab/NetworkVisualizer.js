@@ -185,27 +185,27 @@ class NetworkVisualizer {
 
                 line.attr('stroke', newColor);
                 arrow.attr('fill', newColor);
-            }
-        });
 
-        // Update details panel if selected element exists
-        if (this.selectedElement) {
-            const data = this.selectedElement.__data__;
-            if (data) {
-                // For links, we need to find the updated link data
-                if (this.selectedElement.classList.contains('link-half')) {
-                    const linkData = this.currentNetwork.links.find(
-                        l => l.source === data.source && l.target === data.target
-                    );
-                    if (linkData) {
-                        this.updateDetailsPanel(linkData, 'link');
+                // Update details panel if this is the selected link
+                if (this.selectedElement) {
+                    // Get the parent group of the selected element
+                    const selectedGroup = this.selectedElement.closest('g');
+                    const selectedLine = selectedGroup.querySelector('line.link-half');
+
+                    if (selectedLine) {
+                        const selectedSource = selectedLine.getAttribute('source');
+                        const selectedTarget = selectedLine.getAttribute('target');
+
+                        console.log('Checking selected link:', { selectedSource, selectedTarget, source, target });
+
+                        if (selectedSource === source && selectedTarget === target) {
+                            console.log('Match found, updating panel with:', { ...linkData.metrics.current });
+                            this.detailsPanelManager.updateLinkDetails(linkData);
+                        }
                     }
-                } else {
-                    // For nodes, use existing data
-                    this.updateDetailsPanel(data, 'node');
                 }
             }
-        }
+        });
     }
 
     // New method to register update callbacks
