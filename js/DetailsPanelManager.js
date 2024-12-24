@@ -74,19 +74,19 @@ class DetailsPanelManager {
                 <table>
                     <tr>
                         <td>Avg Node ${metricTitle}:</td>
-                        <td>${stats.avgMetric.nodes.toFixed(1)}%</td>
+                        <td>${stats.avgMetric.nodes.toFixed(2)}%</td>
                     </tr>
                     <tr>
                         <td>Max Node ${metricTitle}:</td>
-                        <td>${stats.maxMetric.nodes.toFixed(1)}%</td>
+                        <td>${stats.maxMetric.nodes.toFixed(2)}%</td>
                     </tr>
                     <tr>
                         <td>Avg Link ${metricTitle}:</td>
-                        <td>${stats.avgMetric.links.toFixed(1)}%</td>
+                        <td>${stats.avgMetric.links.toFixed(2)}%</td>
                     </tr>
                     <tr>
                         <td>Max Link ${metricTitle}:</td>
-                        <td>${stats.maxMetric.links.toFixed(1)}%</td>
+                        <td>${stats.maxMetric.links.toFixed(2)}%</td>
                     </tr>
                 </table>
             </div>
@@ -117,7 +117,7 @@ class DetailsPanelManager {
                     </tr>
                     <tr>
                         <td>Current ${metricTitle}:</td>
-                        <td>${node.metrics.current[metricName]}%</td>
+                        <td>${node.metrics.current[metricName].toFixed(2)}%</td>
                     </tr>
                     <tr>
                         <td>Contained Nodes:</td>
@@ -134,25 +134,26 @@ class DetailsPanelManager {
                 <table>
                     <tr>
                         <td>Avg Node ${metricTitle}:</td>
-                        <td>${stats.avgMetric.nodes.toFixed(1)}%</td>
+                        <td>${stats.avgMetric.nodes.toFixed(2)}%</td>
                     </tr>
                     <tr>
                         <td>Max Node ${metricTitle}:</td>
-                        <td>${stats.maxMetric.nodes.toFixed(1)}%</td>
+                        <td>${stats.maxMetric.nodes.toFixed(2)}%</td>
                     </tr>
                     <tr>
                         <td>Avg Link ${metricTitle}:</td>
-                        <td>${stats.avgMetric.links.toFixed(1)}%</td>
+                        <td>${stats.avgMetric.links.toFixed(2)}%</td>
                     </tr>
                     <tr>
                         <td>Max Link ${metricTitle}:</td>
-                        <td>${stats.maxMetric.links.toFixed(1)}%</td>
+                        <td>${stats.maxMetric.links.toFixed(2)}%</td>
                     </tr>
                 </table>
             </div>
             ${this.renderCriticalMetrics(stats)}
         `;
     }
+
 
     updateLeafNodeDetails(node) {
         const metricName = this.config.visualization.metric;
@@ -172,7 +173,7 @@ class DetailsPanelManager {
                     </tr>
                     <tr>
                         <td>${metricTitle}:</td>
-                        <td>${node.metrics.current[metricName]}%</td>
+                        <td>${node.metrics.current[metricName].toFixed(2)}%</td>
                     </tr>
                 </table>
             </div>
@@ -203,7 +204,7 @@ class DetailsPanelManager {
                     </tr>
                     <tr>
                         <td>${metricTitle}:</td>
-                        <td>${link.metrics.current[metricName]}%</td>
+                        <td>${link.metrics.current[metricName].toFixed(2)}%</td>
                     </tr>
                     <tr>
                         <td>Capacity:</td>

@@ -545,7 +545,7 @@ class NetworkVisualizer {
         tooltip.innerHTML = `
             <strong>Node ${d.id}</strong><br>
             Type: ${d.type}<br>
-            Resource Allocation: ${d.metrics?.current?.allocation ?? 0}%
+            Resource Allocation: ${(d.metrics?.current?.allocation ?? 0).toFixed(2)}%
             ${d.type === "cluster" ? "<br>(Click to explore)" : ""}
         `;
         tooltip.style.left = (event.pageX + 10) + "px";
@@ -557,7 +557,7 @@ class NetworkVisualizer {
         const tooltip = document.getElementById("tooltip");
         tooltip.innerHTML = `
             <strong>${d.source} → ${d.target}</strong><br>
-            Allocation: ${d.metrics?.current?.allocation ?? 0}%<br>
+            Allocation: ${(d.metrics?.current?.allocation ?? 0).toFixed(2)}%<br>
             Capacity: ${d.metrics?.current?.capacity ?? 'N/A'}
         `;
         tooltip.style.left = (event.pageX + 10) + "px";
