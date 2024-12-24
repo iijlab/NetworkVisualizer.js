@@ -58,22 +58,16 @@ async function initializeVisualizer() {
 
         // Create visualizer instance
         const visualizer = new NetworkVisualizer("#network", config);
-        let updateInterval = null;
+        const updateIntervals = new Map();
 
         if (useMockData) {
             // Load root network data
             const rootNetworkResponse = await fetch('data/networks/root.json');
             const rootNetwork = await rootNetworkResponse.json();
 
-            // Ensure metadata has update interval
-            if (!rootNetwork.metadata) {
-                rootNetwork.metadata = {};
-            }
-            rootNetwork.metadata.updateInterval = 2000; // 2 seconds
-
             // Create mock data generator
             const mockGenerator = new MockNetworkDataGenerator(rootNetwork, {
-                updateInterval: rootNetwork.metadata.updateInterval,
+                updateInterval: 2000,
                 metricName: config.visualization.metric
             });
 
@@ -88,11 +82,10 @@ async function initializeVisualizer() {
                     }
                     let networkData = await response.json();
 
-                    // Ensure metadata has update interval for all networks
-                    if (!networkData.metadata) {
-                        networkData.metadata = {};
+                    // Add network to mock generator if it doesn't exist
+                    if (!mockGenerator.hasNetwork(networkId)) {
+                        mockGenerator.addNetwork(networkData);
                     }
-                    networkData.metadata.updateInterval = 2000; // 2 seconds
 
                     return networkData;
                 } catch (error) {
@@ -102,37 +95,29 @@ async function initializeVisualizer() {
             };
 
             visualizer.startDynamicUpdates = (networkId) => {
-                if (updateInterval) {
-                    clearInterval(updateInterval);
+                // Clear existing interval for this network if it exists
+                if (updateIntervals.has(networkId)) {
+                    clearInterval(updateIntervals.get(networkId));
                 }
 
-                console.log('Starting dynamic updates...');
+                console.log(`Starting dynamic updates for network ${networkId}...`);
 
-                updateInterval = setInterval(() => {
-                    const updates = mockGenerator.generateUpdate();
-                    console.log('Generated update for links:', updates.changes.links);
-
-                    // Log a sample of current link data
-                    const sampleLinkId = Object.keys(updates.changes.links)[0];
-                    if (sampleLinkId) {
-                        console.log('Sample link update:', {
-                            id: sampleLinkId,
-                            oldValue: visualizer.currentNetwork.links.find(
-                                l => `${l.source}->${l.target}` === sampleLinkId
-                            )?.metrics?.current?.allocation,
-                            newValue: updates.changes.links[sampleLinkId].metrics.current.allocation
-                        });
+                const interval = setInterval(() => {
+                    const updates = mockGenerator.generateUpdate(networkId);
+                    if (updates) {
+                        console.log(`Generated update for network ${networkId}:`, updates);
+                        visualizer.applyNetworkUpdates(updates);
                     }
-
-                    visualizer.applyNetworkUpdates(updates);
                 }, 2000);  // Update every 2 seconds
+
+                updateIntervals.set(networkId, interval);
             };
 
             visualizer.stopDynamicUpdates = () => {
-                if (updateInterval) {
-                    clearInterval(updateInterval);
-                    updateInterval = null;
-                }
+                updateIntervals.forEach((interval) => {
+                    clearInterval(interval);
+                });
+                updateIntervals.clear();
             };
         } else {
             // Real backend implementation

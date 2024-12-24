@@ -3,18 +3,8 @@
  * Generates mock network metric updates following wave-like patterns for visualization testing.
  */
 class MockNetworkDataGenerator {
-    /**
-     * Create a new mock data generator
-     * @param {Object} baseNetwork - Initial network configuration
-     * @param {Object} options - Generator options
-     * @param {number} [options.updateInterval=5000] - Update interval in milliseconds
-     * @param {number} [options.maxVariation=10] - Maximum value variation percentage
-     * @param {string} [options.metricName='allocation'] - Name of the metric to simulate
-     * @param {Object} [options.ranges] - Value ranges for alerts
-     */
     constructor(baseNetwork, options = {}) {
-        this.baseNetwork = baseNetwork;
-        this.startTime = Date.now();
+        this.networkGenerators = new Map();
         this.options = {
             updateInterval: 5000,
             maxVariation: 10,
@@ -26,87 +16,81 @@ class MockNetworkDataGenerator {
             ...options
         };
 
-        // Initialize evolution patterns
-        this.evolutionPatterns = {
-            nodes: new Map(),
-            links: new Map()
-        };
-
-        this.initializeEvolutionPatterns();
+        // Initialize generator for root network
+        this.initializeNetworkGenerator(baseNetwork);
         console.log('MockNetworkDataGenerator initialized with metric:', this.options.metricName);
     }
 
     /**
-     * Initialize evolution patterns for nodes and links
-     * @private
+     * Initialize or get a network generator for a specific network
+     * @param {Object} networkData - Network configuration
+     * @returns {Object} Network generator instance
      */
-    initializeEvolutionPatterns() {
-        // Generate patterns for nodes
-        this.baseNetwork.nodes.forEach(node => {
-            this.evolutionPatterns.nodes.set(node.id, this.createEvolutionPattern(
-                node.metrics?.current?.[this.options.metricName]
-            ));
-        });
+    initializeNetworkGenerator(networkData) {
+        const networkId = networkData.metadata.id;
 
-        // Generate patterns for links
-        this.baseNetwork.links.forEach(link => {
-            const linkId = `${link.source}->${link.target}`;
-            this.evolutionPatterns.links.set(linkId, this.createEvolutionPattern(
-                link.metrics?.current?.[this.options.metricName]
-            ));
-        });
+        if (!this.networkGenerators.has(networkId)) {
+            const generator = {
+                networkData: networkData,
+                startTime: Date.now(),
+                evolutionPatterns: {
+                    nodes: new Map(),
+                    links: new Map()
+                }
+            };
+
+            // Initialize evolution patterns for nodes
+            networkData.nodes.forEach(node => {
+                generator.evolutionPatterns.nodes.set(node.id, this.createEvolutionPattern(
+                    node.metrics?.current?.[this.options.metricName]
+                ));
+            });
+
+            // Initialize evolution patterns for links
+            networkData.links.forEach(link => {
+                const linkId = `${link.source}->${link.target}`;
+                generator.evolutionPatterns.links.set(linkId, this.createEvolutionPattern(
+                    link.metrics?.current?.[this.options.metricName]
+                ));
+            });
+
+            this.networkGenerators.set(networkId, generator);
+        }
+
+        return this.networkGenerators.get(networkId);
     }
 
     /**
      * Create an evolution pattern for a metric
-     * @private
-     * @param {number} initialValue - Initial value of the metric
-     * @returns {Object} Evolution pattern parameters
      */
     createEvolutionPattern(initialValue = 50) {
         return {
-            frequency: 0.1 + Math.random() * 0.2,  // Random frequency between 0.1 and 0.3 Hz
-            phase: Math.random() * 2 * Math.PI,    // Random phase shift
-            baseValue: initialValue,               // Starting point
-            amplitude: 5 + Math.random() * 15,     // Random amplitude between 5 and 20
-            // Add some randomness to make patterns more interesting
+            frequency: 0.1 + Math.random() * 0.2,
+            phase: Math.random() * 2 * Math.PI,
+            baseValue: initialValue,
+            amplitude: 5 + Math.random() * 15,
             noise: {
-                amplitude: Math.random() * 5,      // Small random variations
-                frequency: 0.5 + Math.random()     // Faster than main wave
+                amplitude: Math.random() * 5,
+                frequency: 0.5 + Math.random()
             }
         };
     }
 
     /**
      * Calculate metric value based on time and pattern
-     * @private
-     * @param {Object} pattern - Evolution pattern
-     * @param {number} timestamp - Current timestamp
-     * @returns {number} Calculated metric value
      */
-    calculateValue(pattern, timestamp) {
-        const timeInSeconds = (timestamp - this.startTime) / 1000;
-
-        // Main wave
+    calculateValue(pattern, timestamp, startTime) {
+        const timeInSeconds = (timestamp - startTime) / 1000;
         const mainWave = pattern.amplitude *
             Math.sin(2 * Math.PI * pattern.frequency * timeInSeconds + pattern.phase);
-
-        // Add noise for more realistic variation
         const noise = pattern.noise.amplitude *
             Math.sin(2 * Math.PI * pattern.noise.frequency * timeInSeconds);
-
-        // Combine base value, main wave, and noise
         const value = pattern.baseValue + mainWave + noise;
-
-        // Ensure value stays within 0-100 range
         return Math.max(0, Math.min(100, value));
     }
 
     /**
      * Generate alerts based on metric value
-     * @private
-     * @param {number} value - Current metric value
-     * @returns {Array} List of alerts
      */
     generateAlerts(value) {
         const alerts = [];
@@ -130,10 +114,16 @@ class MockNetworkDataGenerator {
     }
 
     /**
-     * Generate network updates
-     * @returns {Object} Network updates
+     * Generate network updates for a specific network
+     * @param {string} networkId - ID of the network to update
      */
-    generateUpdate() {
+    generateUpdate(networkId = 'root') {
+        const generator = this.networkGenerators.get(networkId);
+        if (!generator) {
+            console.warn(`No generator found for network ${networkId}`);
+            return null;
+        }
+
         const changes = {
             nodes: {},
             links: {}
@@ -143,8 +133,8 @@ class MockNetworkDataGenerator {
         const currentTime = new Date().toISOString();
 
         // Update nodes
-        this.evolutionPatterns.nodes.forEach((pattern, nodeId) => {
-            const newValue = this.calculateValue(pattern, timestamp);
+        generator.evolutionPatterns.nodes.forEach((pattern, nodeId) => {
+            const newValue = this.calculateValue(pattern, timestamp, generator.startTime);
             changes.nodes[nodeId] = {
                 metrics: {
                     current: {
@@ -157,12 +147,20 @@ class MockNetworkDataGenerator {
         });
 
         // Update links
-        this.evolutionPatterns.links.forEach((pattern, linkId) => {
-            const newValue = this.calculateValue(pattern, timestamp);
+        generator.evolutionPatterns.links.forEach((pattern, linkId) => {
+            const newValue = this.calculateValue(pattern, timestamp, generator.startTime);
+            // Get the original link data to preserve capacity
+            const [source, target] = linkId.split('->');
+            const originalLink = generator.networkData.links.find(
+                l => l.source === source && l.target === target
+            );
+            const capacity = originalLink?.metrics?.current?.capacity ?? 100; // Default to 100 if not specified
+
             changes.links[linkId] = {
                 metrics: {
                     current: {
                         [this.options.metricName]: newValue,
+                        capacity: capacity,
                         timestamp: currentTime
                     },
                     alerts: this.generateAlerts(newValue)
@@ -177,13 +175,30 @@ class MockNetworkDataGenerator {
     }
 
     /**
-     * Reset the generator with new base network data
-     * @param {Object} newBaseNetwork - New network configuration
+     * Add a new network to the generator
+     * @param {Object} networkData - Network data to add
      */
-    reset(newBaseNetwork) {
-        this.baseNetwork = newBaseNetwork;
-        this.startTime = Date.now();
-        this.initializeEvolutionPatterns();
+    addNetwork(networkData) {
+        this.initializeNetworkGenerator(networkData);
+    }
+
+    /**
+     * Reset the generator for a specific network
+     * @param {string} networkId - ID of the network to reset
+     * @param {Object} newNetworkData - New network configuration
+     */
+    resetNetwork(networkId, newNetworkData) {
+        this.networkGenerators.delete(networkId);
+        this.initializeNetworkGenerator(newNetworkData);
+    }
+
+    /**
+     * Check if a network exists in the generator
+     * @param {string} networkId - Network ID to check
+     * @returns {boolean} Whether the network exists
+     */
+    hasNetwork(networkId) {
+        return this.networkGenerators.has(networkId);
     }
 }
 
