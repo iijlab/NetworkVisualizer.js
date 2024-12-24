@@ -169,49 +169,42 @@ class NetworkVisualizer {
         Object.entries(updates.changes.links || {}).forEach(([id, change]) => {
             const [source, target] = id.split('->');
 
-            // Find all link elements that match the source->target path
-            svg.selectAll('g.link').each(function () {
-                const linkGroup = d3.select(this);
-                const linkLine = linkGroup.select('line.link-half');
-                const linkArrow = linkGroup.select('path.link-half');
+            // Find and update the link data
+            const linkData = this.currentNetwork.links.find(
+                l => l.source === source && l.target === target
+            );
 
-                // Check if this is our target link by examining its coordinates
-                // We'll need to check against both the line and arrow coordinates
-                if (linkLine.size() > 0 && linkArrow.size() > 0) {
-                    const newMetric = change.metrics?.current;
-                    if (newMetric && newMetric[metricName] !== undefined) {
-                        const newValue = newMetric[metricName];
-                        console.log(`Updating link ${source}->${target} to ${newValue}`);
+            if (linkData) {
+                // Update the stored data and get new color
+                linkData.metrics = change.metrics;
+                const newColor = self.getColorForMetric(change.metrics);
 
-                        const newColor = self.getColorForMetric(change.metrics);
+                // Select and update both the line and arrow elements
+                const line = d3.select(`line.link-half[source="${source}"][target="${target}"]`);
+                const arrow = d3.select(`path.link-half[source="${source}"][target="${target}"]`);
 
-                        // Update both line and arrowhead
-                        linkLine.transition()
-                            .duration(750)
-                            .style('stroke', newColor);
-
-                        linkArrow.transition()
-                            .duration(750)
-                            .style('fill', newColor)
-                            .style('stroke', newColor);
-
-                        // Update stored data
-                        const linkData = self.currentNetwork.links.find(
-                            l => l.source === source && l.target === target
-                        );
-                        if (linkData) {
-                            linkData.metrics = change.metrics;
-                        }
-                    }
-                }
-            });
+                line.attr('stroke', newColor);
+                arrow.attr('fill', newColor);
+            }
         });
 
         // Update details panel if selected element exists
         if (this.selectedElement) {
             const data = this.selectedElement.__data__;
-            this.updateDetailsPanel(data,
-                this.selectedElement.classList.contains('node') ? 'node' : 'link');
+            if (data) {
+                // For links, we need to find the updated link data
+                if (this.selectedElement.classList.contains('link-half')) {
+                    const linkData = this.currentNetwork.links.find(
+                        l => l.source === data.source && l.target === data.target
+                    );
+                    if (linkData) {
+                        this.updateDetailsPanel(linkData, 'link');
+                    }
+                } else {
+                    // For nodes, use existing data
+                    this.updateDetailsPanel(data, 'node');
+                }
+            }
         }
     }
 
@@ -497,6 +490,8 @@ class NetworkVisualizer {
 
         const linkLine = document.createElementNS(svgNS, "line");
         linkLine.setAttribute("class", "link-half");
+        linkLine.setAttribute("source", link.source);  // Add this
+        linkLine.setAttribute("target", link.target);  // Add this
         linkLine.setAttribute("x1", startX);
         linkLine.setAttribute("y1", startY);
         linkLine.setAttribute("x2", arrow.base[0]);
@@ -506,6 +501,8 @@ class NetworkVisualizer {
 
         const arrowHead = document.createElementNS(svgNS, "path");
         arrowHead.setAttribute("class", "link-half");
+        arrowHead.setAttribute("source", link.source);  // Add this
+        arrowHead.setAttribute("target", link.target);  // Add this
         arrowHead.setAttribute("d", `
             M${arrow.left[0]},${arrow.left[1]}
             L${arrow.point[0]},${arrow.point[1]}

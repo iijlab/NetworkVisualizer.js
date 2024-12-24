@@ -110,7 +110,20 @@ async function initializeVisualizer() {
 
                 updateInterval = setInterval(() => {
                     const updates = mockGenerator.generateUpdate();
-                    console.log('Generated update:', updates);
+                    console.log('Generated update for links:', updates.changes.links);
+
+                    // Log a sample of current link data
+                    const sampleLinkId = Object.keys(updates.changes.links)[0];
+                    if (sampleLinkId) {
+                        console.log('Sample link update:', {
+                            id: sampleLinkId,
+                            oldValue: visualizer.currentNetwork.links.find(
+                                l => `${l.source}->${l.target}` === sampleLinkId
+                            )?.metrics?.current?.allocation,
+                            newValue: updates.changes.links[sampleLinkId].metrics.current.allocation
+                        });
+                    }
+
                     visualizer.applyNetworkUpdates(updates);
                 }, 2000);  // Update every 2 seconds
             };
