@@ -159,13 +159,34 @@ class NetworkVisualizer {
                                 .duration(750)
                                 .style('fill', isCluster ? 'white' : newColor)
                                 .style('stroke', newColor);
+
+                            // Update details panel if this is the selected node
+                            if (self.selectedElement) {
+                                const selectedNode = self.selectedElement.closest('g');
+                                const selectedNodeId = selectedNode.querySelector('text').textContent;
+
+                                if (selectedNodeId === id) {
+                                    // If it's a cluster node and we have its network data
+                                    if (nodeData.type === 'cluster' && nodeData.childNetwork) {
+                                        const clusterNetwork = self.dataCache.get(nodeData.childNetwork);
+                                        if (clusterNetwork) {
+                                            self.detailsPanelManager.updateClusterDetails(nodeData, clusterNetwork);
+                                        } else {
+                                            self.detailsPanelManager.updateNodeDetails(nodeData);
+                                        }
+                                    } else {
+                                        // For leaf nodes
+                                        self.detailsPanelManager.updateNodeDetails(nodeData);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             });
         });
 
-        // Update links
+        // Update links (existing code remains the same)
         Object.entries(updates.changes.links || {}).forEach(([id, change]) => {
             const [source, target] = id.split('->');
 
@@ -196,16 +217,18 @@ class NetworkVisualizer {
                         const selectedSource = selectedLine.getAttribute('source');
                         const selectedTarget = selectedLine.getAttribute('target');
 
-                        console.log('Checking selected link:', { selectedSource, selectedTarget, source, target });
-
                         if (selectedSource === source && selectedTarget === target) {
-                            console.log('Match found, updating panel with:', { ...linkData.metrics.current });
                             this.detailsPanelManager.updateLinkDetails(linkData);
                         }
                     }
                 }
             }
         });
+
+        // Update network overview if no element is selected
+        if (!this.selectedElement) {
+            this.updateDetailsWithNetworkOverview();
+        }
     }
 
     // New method to register update callbacks
