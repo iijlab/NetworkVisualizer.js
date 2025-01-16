@@ -1,4 +1,3 @@
-<!-- index-mock.html (mock data) -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -28,10 +27,13 @@
       window.USE_MOCK_DATA = true;
     </script>
 
+    <!-- Load the combined mock data generator first -->
+    <script src="js/MockDataGenerator.js"></script>
+
+    <!-- Then load the rest of the application -->
     <script src="js/DetailsPanelManager.js"></script>
     <script src="js/NetworkStats.js"></script>
     <script src="js/NetworkVisualizer.js"></script>
-    <script src="js/MockNetworkDataGenerator.js"></script>
     <script src="js/init.js"></script>
   </body>
 </html>

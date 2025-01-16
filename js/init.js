@@ -19,6 +19,30 @@ function shouldUseMockData() {
     return false;
 }
 
+async function loadMockData() {
+    try {
+        // Load root network data first
+        const rootNetworkResponse = await fetch('data/networks/root.json');
+        if (!rootNetworkResponse.ok) {
+            throw new Error(`Failed to load root network data: ${rootNetworkResponse.statusText}`);
+        }
+        const rootNetwork = await rootNetworkResponse.json();
+
+        // Initialize mock data generator with root network
+        const mockGenerator = new MockNetworkDataGenerator(rootNetwork, {
+            updateInterval: 2000,
+            metricName: 'allocation',
+            historyLength: 50,
+            historyInterval: 60000 // 1 minute intervals for demo
+        });
+
+        return mockGenerator;
+    } catch (error) {
+        console.error('Error loading mock data:', error);
+        throw error;
+    }
+}
+
 async function initializeVisualizer() {
     try {
         // Determine if we should use mock data
@@ -61,16 +85,8 @@ async function initializeVisualizer() {
         const updateIntervals = new Map();
 
         if (useMockData) {
-            // Load root network data
-            const rootNetworkResponse = await fetch('data/networks/root.json');
-            const rootNetwork = await rootNetworkResponse.json();
-
-            // Create mock data generator
-            const mockGenerator = new MockNetworkDataGenerator(rootNetwork, {
-                updateInterval: 2000,
-                metricName: config.visualization.metric
-            });
-
+            // Initialize mock data generator
+            const mockGenerator = await loadMockData();
             visualizer.mockDataGenerator = mockGenerator;
 
             // Override fetch methods for mock data

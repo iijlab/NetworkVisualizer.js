@@ -339,3 +339,41 @@ body.dark-mode circle[class*="selection"] {
     break-inside: avoid;
   }
 }
+
+.history-plot {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+.history-plot svg {
+  width: 100%;
+  height: auto;
+  min-height: 200px;
+}
+
+/* Dark mode support */
+body.dark-mode .history-plot {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+body.dark-mode .history-plot svg {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Make sure SVG text remains readable in dark mode */
+body.dark-mode .history-plot svg text {
+  fill: #fff;
+}
+
+/* Print optimization */
+@media print {
+  .history-plot {
+      break-inside: avoid;
+      border: 1px solid #999;
+  }
+}

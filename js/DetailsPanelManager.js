@@ -130,6 +130,12 @@ class DetailsPanelManager {
                 </table>
             </div>
             <div class="detail-section">
+                <h3>${metricTitle} History</h3>
+                <div class="history-plot">
+                    ${node.metrics.historyPlot || 'No historical data available'}
+                </div>
+            </div>
+            <div class="detail-section">
                 <h3>Cluster ${metricTitle} Summary</h3>
                 <table>
                     <tr>
@@ -154,7 +160,6 @@ class DetailsPanelManager {
         `;
     }
 
-
     updateLeafNodeDetails(node) {
         const metricName = this.config.visualization.metric;
         const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
@@ -178,9 +183,9 @@ class DetailsPanelManager {
                 </table>
             </div>
             <div class="detail-section">
-                <h3>Historical ${metricTitle}</h3>
-                <div class="chart-container">
-                    [Historical ${metricTitle.toLowerCase()} chart placeholder]
+                <h3>${metricTitle} History</h3>
+                <div class="history-plot">
+                    ${node.metrics.historyPlot || 'No historical data available'}
                 </div>
             </div>
         `;
@@ -214,8 +219,8 @@ class DetailsPanelManager {
             </div>
             <div class="detail-section">
                 <h3>${metricTitle} History</h3>
-                <div class="chart-container">
-                    [${metricTitle} history chart placeholder]
+                <div class="history-plot">
+                    ${link.metrics.historyPlot || 'No historical data available'}
                 </div>
             </div>
         `;
