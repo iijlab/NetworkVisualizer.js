@@ -250,7 +250,27 @@ class NetworkVisualizer {
         themeToggle.className = 'theme-toggle';
         themeToggle.innerHTML = `
             <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18">
-                <path d="M12 17.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zm0 1.5a7 7 0 1 1 0-14 7 7 0 0 1 0 14zm0-16a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V4a1 1 0 0 1 1-1zm0 15a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0v-2a1 1 0 0 1 1-1zM4 12a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1zm15 0a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2h-2a1 1 0 0 1-1-1z"/>
+                <circle cx="12" cy="12" r="4" fill="currentColor"/>
+                <!-- Primary rays -->
+                <rect x="11" y="2" width="2" height="6" rx="1" fill="currentColor"/>
+                <rect x="11" y="16" width="2" height="6" rx="1" fill="currentColor"/>
+                <rect x="16" y="11" width="6" height="2" rx="1" fill="currentColor"/>
+                <rect x="2" y="11" width="6" height="2" rx="1" fill="currentColor"/>
+                <!-- Diagonal rays - calculated for perfect 45° placement -->
+                <g transform="translate(12 12)">
+                    <g transform="rotate(45)">
+                        <rect x="-1" y="-10" width="2" height="6" rx="1" fill="currentColor"/>
+                    </g>
+                    <g transform="rotate(135)">
+                        <rect x="-1" y="-10" width="2" height="6" rx="1" fill="currentColor"/>
+                    </g>
+                    <g transform="rotate(225)">
+                        <rect x="-1" y="-10" width="2" height="6" rx="1" fill="currentColor"/>
+                    </g>
+                    <g transform="rotate(315)">
+                        <rect x="-1" y="-10" width="2" height="6" rx="1" fill="currentColor"/>
+                    </g>
+                </g>
             </svg>
             <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18">
                 <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>
