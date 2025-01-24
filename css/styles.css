@@ -377,3 +377,41 @@ body.dark-mode .history-plot svg text {
       border: 1px solid #999;
   }
 }
+
+/* Resize handle */
+.resize-handle {
+  position: absolute;
+  left: -5px;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+/* Add position relative to panel for absolute positioning of handle */
+.details-panel {
+  position: relative;
+  min-width: 250px; /* Minimum width */
+  max-width: 800px; /* Maximum width */
+  transition: none; /* Remove any transitions that might interfere with dragging */
+}
+
+/* Style for when dragging */
+.details-panel.dragging {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Add this to ensure plots resize smoothly */
+.history-plot {
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+}
+
+/* Make sure the plot container resizes smoothly */
+.history-plot > div {
+  width: 100%;
+  height: auto;
+}

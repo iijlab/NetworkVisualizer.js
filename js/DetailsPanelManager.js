@@ -4,6 +4,7 @@ class DetailsPanelManager {
         this.config = config;
         this.contentElement = this.panel.querySelector('.details-content');
         this.setupLegend();
+        this.setupResizeHandle();
     }
 
     setupLegend() {
@@ -44,6 +45,144 @@ class DetailsPanelManager {
         `;
 
         this.contentElement.insertAdjacentElement('afterend', legendDiv);
+    }
+
+    setupResizeHandle() {
+        // Create resize handle
+        const handle = document.createElement('div');
+        handle.className = 'resize-handle';
+        this.panel.appendChild(handle);
+
+        let startX, startWidth;
+        let isResizing = false;
+        let resizeTimeout;
+
+        const startResize = (e) => {
+            startX = e.clientX;
+            startWidth = parseInt(document.defaultView.getComputedStyle(this.panel).width, 10);
+            isResizing = true;
+            this.panel.classList.add('dragging');
+            document.addEventListener('mousemove', doResize);
+            document.addEventListener('mouseup', stopResize);
+            e.preventDefault(); // Prevent text selection
+        };
+
+        const doResize = (e) => {
+            if (!isResizing) return;
+
+            const newWidth = startWidth - (e.clientX - startX);
+            // Clamp width between min and max values
+            const clampedWidth = Math.min(Math.max(newWidth, 250), 800);
+            this.panel.style.width = `${clampedWidth}px`;
+
+            // Throttle plot updates during resize
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                this.updateActivePlot();
+            }, 50);
+        };
+
+        const stopResize = () => {
+            isResizing = false;
+            this.panel.classList.remove('dragging');
+            document.removeEventListener('mousemove', doResize);
+            document.removeEventListener('mouseup', stopResize);
+            this.updateActivePlot(); // Final update of plots
+        };
+
+        handle.addEventListener('mousedown', startResize);
+    }
+
+    updateActivePlot() {
+        // Find all plot containers
+        const plotContainers = this.panel.querySelectorAll('.history-plot');
+        plotContainers.forEach(container => {
+            if (container.firstChild) {
+                // Get the current data and recreate the plot
+                const existingPlot = container.querySelector('figure');
+                if (existingPlot) {
+                    const width = container.clientWidth - 30; // Account for padding
+                    const metricName = container.dataset.metricName;
+                    const history = JSON.parse(container.dataset.history);
+                    const plot = this.createHistoryPlotElement(history, metricName, width);
+                    if (plot) {
+                        container.replaceChild(plot, existingPlot);
+                    }
+                }
+            }
+        });
+    }
+
+    createHistoryPlot(history, metricName) {
+        if (!history || history.length === 0) {
+            return '<div class="empty-plot">No historical data available</div>';
+        }
+
+        const plotDiv = document.createElement('div');
+        plotDiv.className = 'history-plot';
+        // Store data for resize updates
+        plotDiv.dataset.history = JSON.stringify(history);
+        plotDiv.dataset.metricName = metricName;
+
+        const plot = this.createHistoryPlotElement(history, metricName);
+        if (plot) {
+            plotDiv.appendChild(plot);
+        }
+
+        return plotDiv.outerHTML;
+    }
+
+    createHistoryPlotElement(history, metricName, width) {
+        const data = history.map(point => ({
+            value: point[metricName],
+            timestamp: new Date(point.timestamp)
+        }));
+
+        // Use provided width or calculate from container
+        const plotWidth = width || (this.panel.clientWidth - 60); // Account for padding
+
+        return Plot.plot({
+            style: {
+                background: "transparent",
+                color: "currentColor",
+                fontSize: "12px",
+                fontFamily: "Arial, sans-serif"
+            },
+            width: plotWidth,
+            height: 200,
+            marginLeft: 40,
+            marginRight: 20,
+            marginTop: 20,
+            marginBottom: 30,
+            y: {
+                label: metricName.charAt(0).toUpperCase() + metricName.slice(1) + " (%)",
+                domain: [0, 100],
+                grid: true
+            },
+            x: {
+                label: "Time",
+                type: "time",
+                tickFormat: "%H:%M"
+            },
+            marks: [
+                Plot.ruleY([0, 25, 50, 75, 100], {
+                    stroke: "#ddd",
+                    strokeDasharray: "4,4"
+                }),
+                Plot.line(data, {
+                    x: "timestamp",
+                    y: "value",
+                    stroke: "#2196f3",
+                    strokeWidth: 2
+                }),
+                Plot.dot(data, {
+                    x: "timestamp",
+                    y: "value",
+                    fill: "#2196f3",
+                    r: 3
+                })
+            ]
+        });
     }
 
     updateNetworkOverview(network) {
@@ -131,9 +270,7 @@ class DetailsPanelManager {
             </div>
             <div class="detail-section">
                 <h3>${metricTitle} History</h3>
-                <div class="history-plot">
-                    ${node.metrics.historyPlot || 'No historical data available'}
-                </div>
+                ${this.createHistoryPlot(node.metrics.history, metricName)}
             </div>
             <div class="detail-section">
                 <h3>Cluster ${metricTitle} Summary</h3>
@@ -184,9 +321,7 @@ class DetailsPanelManager {
             </div>
             <div class="detail-section">
                 <h3>${metricTitle} History</h3>
-                <div class="history-plot">
-                    ${node.metrics.historyPlot || 'No historical data available'}
-                </div>
+                ${this.createHistoryPlot(node.metrics.history, metricName)}
             </div>
         `;
     }
@@ -219,9 +354,7 @@ class DetailsPanelManager {
             </div>
             <div class="detail-section">
                 <h3>${metricTitle} History</h3>
-                <div class="history-plot">
-                    ${link.metrics.historyPlot || 'No historical data available'}
-                </div>
+                ${this.createHistoryPlot(link.metrics.history, metricName)}
             </div>
         `;
     }

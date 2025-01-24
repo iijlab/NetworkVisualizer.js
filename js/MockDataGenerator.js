@@ -1,125 +1,3 @@
-// MockDataGenerator.js
-
-/**
- * Generates mock SVG plots to simulate backend-generated visualizations
- */
-class MockPlotGenerator {
-    constructor(options = {}) {
-        this.options = {
-            width: 400,
-            height: 200,
-            padding: 40,
-            pointCount: 50,
-            ...options
-        };
-    }
-
-    /**
-     * Generate an SVG line plot from historical data
-     */
-    generateHistoryPlot(history, metricName) {
-        const { width, height, padding } = this.options;
-
-        // Calculate plot area dimensions
-        const plotWidth = width - 2 * padding;
-        const plotHeight = height - 2 * padding;
-
-        // Extract values and timestamps
-        const values = history.map(point => point[metricName]);
-        const timestamps = history.map(point => new Date(point.timestamp).getTime());
-
-        // Calculate scales
-        const xMin = Math.min(...timestamps);
-        const xMax = Math.max(...timestamps);
-        const yMin = 0;  // Always start from 0 for percentages
-        const yMax = 100;  // Max percentage
-
-        // Generate path data
-        const points = history.map((point, i) => {
-            const x = padding + (plotWidth * (timestamps[i] - xMin) / (xMax - xMin));
-            const y = height - padding - (plotHeight * (values[i] - yMin) / (yMax - yMin));
-            return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
-        }).join(' ');
-
-        // Generate time axis ticks
-        const timeFormat = new Intl.DateTimeFormat('en-US', {
-            hour: 'numeric',
-            minute: '2-digit'
-        });
-        const xTicks = timestamps.filter((_, i) => i % 10 === 0).map(timestamp => ({
-            value: timestamp,
-            label: timeFormat.format(new Date(timestamp))
-        }));
-
-        // Generate y-axis ticks
-        const yTicks = [0, 25, 50, 75, 100].map(value => ({
-            value,
-            y: height - padding - (plotHeight * value / 100)
-        }));
-
-        return `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}"
-                style="font-family: Arial, sans-serif; font-size: 12px;">
-
-                <!-- Grid lines -->
-                ${yTicks.map(tick => `
-                    <line x1="${padding}" y1="${tick.y}"
-                          x2="${width - padding}" y2="${tick.y}"
-                          stroke="#e0e0e0" stroke-width="1" stroke-dasharray="4,4"/>
-                `).join('')}
-
-                <!-- Axes -->
-                <line x1="${padding}" y1="${height - padding}"
-                      x2="${width - padding}" y2="${height - padding}"
-                      stroke="#666" stroke-width="1"/>
-                <line x1="${padding}" y1="${padding}"
-                      x2="${padding}" y2="${height - padding}"
-                      stroke="#666" stroke-width="1"/>
-
-                <!-- Y-axis labels -->
-                ${yTicks.map(tick => `
-                    <text x="${padding - 5}" y="${tick.y}"
-                          text-anchor="end" alignment-baseline="middle">
-                        ${tick.value}%
-                    </text>
-                `).join('')}
-
-                <!-- X-axis labels -->
-                ${xTicks.map(tick => {
-            const x = padding + (plotWidth * (tick.value - xMin) / (xMax - xMin));
-            return `
-                        <text x="${x}" y="${height - padding + 20}"
-                              text-anchor="middle">
-                            ${tick.label}
-                        </text>
-                    `;
-        }).join('')}
-
-                <!-- Data line -->
-                <path d="${points}" fill="none" stroke="#2196f3" stroke-width="2"/>
-
-                <!-- Data points -->
-                ${history.map((point, i) => {
-            const x = padding + (plotWidth * (timestamps[i] - xMin) / (xMax - xMin));
-            const y = height - padding - (plotHeight * (values[i] - yMin) / (yMax - yMin));
-            return `
-                        <circle cx="${x}" cy="${y}" r="3"
-                                fill="#2196f3"/>
-                    `;
-        }).join('')}
-
-                <!-- Title -->
-                <text x="${width / 2}" y="20" text-anchor="middle" font-weight="bold">
-                    ${metricName.charAt(0).toUpperCase() + metricName.slice(1)} History
-                </text>
-            </svg>
-        `;
-    }
-}
-
-/**
- * Generates mock network data with historical metrics
- */
 class MockNetworkDataGenerator {
     constructor(baseNetwork, options = {}) {
         this.networkGenerators = new Map();
@@ -135,9 +13,6 @@ class MockNetworkDataGenerator {
             },
             ...options
         };
-
-        // Initialize plot generator
-        this.plotGenerator = new MockPlotGenerator();
 
         // Initialize generator for root network
         this.initializeNetworkGenerator(baseNetwork);
@@ -169,10 +44,6 @@ class MockNetworkDataGenerator {
 
                 // Generate initial history
                 node.metrics.history = this.generateHistory(pattern, baseValue);
-                node.metrics.historyPlot = this.plotGenerator.generateHistoryPlot(
-                    node.metrics.history,
-                    this.options.metricName
-                );
             });
 
             // Initialize evolution patterns and history for links
@@ -188,10 +59,6 @@ class MockNetworkDataGenerator {
 
                 // Generate initial history
                 link.metrics.history = this.generateHistory(pattern, baseValue);
-                link.metrics.historyPlot = this.plotGenerator.generateHistoryPlot(
-                    link.metrics.history,
-                    this.options.metricName
-                );
             });
 
             this.networkGenerators.set(networkId, generator);
@@ -310,12 +177,6 @@ class MockNetworkDataGenerator {
                 [this.options.metricName]: newValue
             });
 
-            // Generate new plot
-            const historyPlot = this.plotGenerator.generateHistoryPlot(
-                node.metrics.history,
-                this.options.metricName
-            );
-
             changes.nodes[nodeId] = {
                 metrics: {
                     current: {
@@ -323,7 +184,6 @@ class MockNetworkDataGenerator {
                         timestamp: currentTime
                     },
                     history: node.metrics.history,
-                    historyPlot: historyPlot,
                     alerts: this.generateAlerts(newValue)
                 }
             };
@@ -347,12 +207,6 @@ class MockNetworkDataGenerator {
                 [this.options.metricName]: newValue
             });
 
-            // Generate new plot
-            const historyPlot = this.plotGenerator.generateHistoryPlot(
-                link.metrics.history,
-                this.options.metricName
-            );
-
             const capacity = link?.metrics?.current?.capacity ?? 100;
 
             changes.links[linkId] = {
@@ -363,7 +217,6 @@ class MockNetworkDataGenerator {
                         timestamp: currentTime
                     },
                     history: link.metrics.history,
-                    historyPlot: historyPlot,
                     alerts: this.generateAlerts(newValue)
                 }
             };
@@ -391,8 +244,7 @@ class MockNetworkDataGenerator {
 
 // Export for both browser and Node.js environments
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { MockPlotGenerator, MockNetworkDataGenerator };
+    module.exports = MockNetworkDataGenerator;
 } else if (typeof window !== 'undefined') {
-    window.MockPlotGenerator = MockPlotGenerator;
     window.MockNetworkDataGenerator = MockNetworkDataGenerator;
 }
