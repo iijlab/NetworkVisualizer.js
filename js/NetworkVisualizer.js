@@ -50,6 +50,9 @@ class NetworkVisualizer {
             ease: d3.easeCubic
         };
 
+        // Initialize context menu
+        this.initializeContextMenu();  // Add this line here
+
         // Add click handler to the container for blank space clicks
         const container = document.querySelector(this.containerId);
         container.addEventListener('click', (event) => {
@@ -527,14 +530,14 @@ class NetworkVisualizer {
         selectionHighlight.setAttribute("y1", startY);
         selectionHighlight.setAttribute("x2", arrow.base[0]);
         selectionHighlight.setAttribute("y2", arrow.base[1]);
-        selectionHighlight.setAttribute("stroke", "#666");  // Gray color
+        selectionHighlight.setAttribute("stroke", "#666");
         selectionHighlight.setAttribute("stroke-width", this.config.links.width + 4);
-        selectionHighlight.setAttribute("opacity", "0");    // Hidden by default
+        selectionHighlight.setAttribute("opacity", "0");
 
         const linkLine = document.createElementNS(svgNS, "line");
         linkLine.setAttribute("class", "link-half");
-        linkLine.setAttribute("source", link.source);  // Add this
-        linkLine.setAttribute("target", link.target);  // Add this
+        linkLine.setAttribute("source", link.source);
+        linkLine.setAttribute("target", link.target);
         linkLine.setAttribute("x1", startX);
         linkLine.setAttribute("y1", startY);
         linkLine.setAttribute("x2", arrow.base[0]);
@@ -542,10 +545,13 @@ class NetworkVisualizer {
         linkLine.setAttribute("stroke", this.getColorForAllocation(link.metrics));
         linkLine.setAttribute("stroke-width", this.config.links.width);
 
+        // Store link data for context menu
+        linkLine.__data__ = link;
+
         const arrowHead = document.createElementNS(svgNS, "path");
         arrowHead.setAttribute("class", "link-half");
-        arrowHead.setAttribute("source", link.source);  // Add this
-        arrowHead.setAttribute("target", link.target);  // Add this
+        arrowHead.setAttribute("source", link.source);
+        arrowHead.setAttribute("target", link.target);
         arrowHead.setAttribute("d", `
             M${arrow.left[0]},${arrow.left[1]}
             L${arrow.point[0]},${arrow.point[1]}
@@ -554,6 +560,9 @@ class NetworkVisualizer {
         `);
         arrowHead.setAttribute("fill", this.getColorForAllocation(link.metrics));
         arrowHead.setAttribute("stroke", "none");
+
+        // Store link data for context menu (same as line)
+        arrowHead.__data__ = link;
 
         const handleClick = (event) => {
             event.stopPropagation();
@@ -571,13 +580,20 @@ class NetworkVisualizer {
             this.updateDetailsPanel(link, 'link');
         };
 
+        // Add event listeners to both line and arrowhead
         [linkLine, arrowHead].forEach(element => {
             element.addEventListener("mouseover", (event) => this.showLinkTooltip(event, link));
             element.addEventListener("mouseout", () => this.hideTooltip());
             element.addEventListener("click", handleClick);
+
+            // Add context menu event listeners
+            element.addEventListener("contextmenu", (event) => this.handleContextMenu(event, element, 'link'));
+            element.addEventListener("touchstart", (event) => this.handleTouchStart(event, element, 'link'));
+            element.addEventListener("touchmove", (event) => this.handleTouchMove(event));
+            element.addEventListener("touchend", () => this.handleTouchEnd());
         });
 
-        group.appendChild(selectionHighlight);  // Add highlight first (underneath)
+        group.appendChild(selectionHighlight);
         group.appendChild(linkLine);
         group.appendChild(arrowHead);
         linkGroup.appendChild(group);
@@ -719,19 +735,22 @@ class NetworkVisualizer {
             const selectionHighlight = document.createElementNS(svgNS, "circle");
             selectionHighlight.setAttribute("r", this.calculateNodeRadius(node) + 3);
             selectionHighlight.setAttribute("fill", "none");
-            selectionHighlight.setAttribute("stroke", "#666");  // Gray color
+            selectionHighlight.setAttribute("stroke", "#666");
             selectionHighlight.setAttribute("stroke-width", "2");
-            selectionHighlight.setAttribute("opacity", "0");    // Hidden by default
+            selectionHighlight.setAttribute("opacity", "0");
 
             const circle = document.createElementNS(svgNS, "circle");
             circle.setAttribute("r", this.calculateNodeRadius(node));
             circle.setAttribute("fill", node.type === "cluster" ? "white" :
-                this.getColorForAllocation(node.metrics));
-            circle.setAttribute("stroke", this.getColorForAllocation(node.metrics));
+                this.getColorForMetric(node.metrics));
+            circle.setAttribute("stroke", this.getColorForMetric(node.metrics));
             circle.setAttribute("stroke-width", node.type === "cluster"
                 ? this.config.nodes.cluster.strokeWidth
                 : this.config.nodes.leaf.strokeWidth);
             circle.style.cursor = node.type === "cluster" ? "pointer" : "default";
+
+            // Store node data for context menu
+            circle.__data__ = node;
 
             const label = document.createElementNS(svgNS, "text");
             label.setAttribute("class", "node-label");
@@ -769,14 +788,30 @@ class NetworkVisualizer {
                 }
             };
 
+            // Add event listeners for basic interactions
             nodeG.addEventListener("mouseover", (event) => this.showNodeTooltip(event, node));
             nodeG.addEventListener("mouseout", () => this.hideTooltip());
             nodeG.addEventListener("click", handleNodeClick);
 
-            nodeG.appendChild(selectionHighlight);  // Add highlight first (underneath)
+            // Add context menu event listeners
+            nodeG.addEventListener("contextmenu", (event) => this.handleContextMenu(event, circle, 'node'));
+            nodeG.addEventListener("touchstart", (event) => this.handleTouchStart(event, circle, 'node'));
+            nodeG.addEventListener("touchmove", (event) => this.handleTouchMove(event));
+            nodeG.addEventListener("touchend", () => this.handleTouchEnd());
+
+            nodeG.appendChild(selectionHighlight);
             nodeG.appendChild(circle);
             nodeG.appendChild(label);
             nodeGroup.appendChild(nodeG);
+        });
+
+        // Add click handler to the SVG container for closing context menu
+        svg.addEventListener('click', (event) => {
+            // Only handle clicks directly on the SVG, not on nodes or links
+            if (event.target === svg) {
+                this.hideContextMenu();
+                this.clearSelection();
+            }
         });
     }
 
@@ -822,6 +857,187 @@ class NetworkVisualizer {
 
     async fetchNetworkData(networkId) {
         throw new Error('fetchNetworkData must be implemented');
+    }
+
+    initializeContextMenu() {
+        // Create context menu element if it doesn't exist
+        if (!this.contextMenu?.element) {
+            const menu = document.createElement('div');
+            menu.className = 'context-menu';
+            document.body.appendChild(menu);
+
+            this.contextMenu = {
+                element: menu,
+                touchTimer: null,
+                touchStartPosition: null,
+                longPressDelay: 500,
+                moveThreshold: 10
+            };
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!this.contextMenu.element.contains(e.target)) {
+                    this.hideContextMenu();
+                }
+            });
+
+            // Handle theme changes
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.attributeName === 'class') {
+                        // Update context menu color scheme if needed
+                        if (document.body.classList.contains('dark-mode')) {
+                            menu.classList.add('dark-mode');
+                        } else {
+                            menu.classList.remove('dark-mode');
+                        }
+                    }
+                });
+            });
+
+            observer.observe(document.body, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        }
+    }
+
+    showContextMenu(x, y, items) {
+        this.contextMenu.element.innerHTML = items.map(item => `
+            <div class="context-menu-item" style="
+                padding: 8px 20px;
+                cursor: pointer;
+                white-space: nowrap;
+                ${item.color ? `color: ${item.color};` : ''}
+            ">${item.label}</div>
+        `).join('');
+
+        const menuItems = this.contextMenu.element.querySelectorAll('.context-menu-item');
+        items.forEach((item, index) => {
+            menuItems[index].addEventListener('click', () => {
+                item.action();
+                this.hideContextMenu();
+            });
+        });
+
+        this.contextMenu.element.style.display = 'block';
+
+        // Position menu within viewport bounds
+        const rect = this.contextMenu.element.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        x = Math.min(x, viewportWidth - rect.width);
+        y = Math.min(y, viewportHeight - rect.height);
+
+        this.contextMenu.element.style.left = x + 'px';
+        this.contextMenu.element.style.top = y + 'px';
+    }
+
+    hideContextMenu() {
+        if (this.contextMenu?.element) {
+            this.contextMenu.element.style.display = 'none';
+        }
+    }
+
+    handleContextMenu(event, element, type) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const items = this.getContextMenuItems(element, type);
+        this.showContextMenu(event.clientX, event.clientY, items);
+    }
+
+    handleTouchStart(event, element, type) {
+        const touch = event.touches[0];
+        this.contextMenu.touchStartPosition = {
+            x: touch.clientX,
+            y: touch.clientY
+        };
+
+        this.contextMenu.touchTimer = setTimeout(() => {
+            const items = this.getContextMenuItems(element, type);
+            this.showContextMenu(touch.clientX, touch.clientY, items);
+        }, this.contextMenu.longPressDelay);
+    }
+
+    handleTouchMove(event) {
+        if (!this.contextMenu?.touchStartPosition) return;
+
+        const touch = event.touches[0];
+        const xDiff = Math.abs(touch.clientX - this.contextMenu.touchStartPosition.x);
+        const yDiff = Math.abs(touch.clientY - this.contextMenu.touchStartPosition.y);
+
+        if (xDiff > this.contextMenu.moveThreshold || yDiff > this.contextMenu.moveThreshold) {
+            clearTimeout(this.contextMenu.touchTimer);
+            this.contextMenu.touchStartPosition = null;
+        }
+    }
+
+    handleTouchEnd() {
+        if (this.contextMenu?.touchTimer) {
+            clearTimeout(this.contextMenu.touchTimer);
+        }
+        this.contextMenu.touchStartPosition = null;
+    }
+
+    getContextMenuItems(element, type) {
+        const baseItems = [
+            {
+                label: 'View Details',
+                action: () => {
+                    if (this.selectedElement !== element) {
+                        if (this.selectedElement?.previousSibling) {
+                            this.selectedElement.previousSibling.setAttribute("opacity", "0");
+                        }
+                        this.selectedElement = element;
+                        element.previousSibling.setAttribute("opacity", "0.3");
+                    }
+                    this.updateDetailsPanel(element.__data__, type);
+                }
+            }
+        ];
+
+        if (type === 'node' && element.__data__.type === 'cluster') {
+            baseItems.push({
+                label: 'Explore Cluster',
+                action: async () => {
+                    const networkId = element.__data__.childNetwork;
+                    if (networkId) {
+                        await this.loadNetwork(networkId);
+                    }
+                }
+            });
+        }
+
+        // Add type-specific items
+        if (type === 'link') {
+            baseItems.push({
+                label: `Capacity: ${element.__data__.metrics?.current?.capacity ?? 'N/A'}`,
+                action: () => { } // This is just informational
+            });
+        }
+
+        // Add monitoring-related items
+        baseItems.push(
+            {
+                label: 'Set Alert',
+                action: () => {
+                    console.log('Set alert for:', element.__data__.id ||
+                        `${element.__data__.source}->${element.__data__.target}`);
+                }
+            },
+            {
+                label: 'Mark for Review',
+                color: document.body.classList.contains('dark-mode') ? '#ff6b6b' : '#f44336',
+                action: () => {
+                    console.log('Marked for review:', element.__data__.id ||
+                        `${element.__data__.source}->${element.__data__.target}`);
+                }
+            }
+        );
+
+        return baseItems;
     }
 }
 

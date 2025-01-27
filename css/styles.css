@@ -415,3 +415,43 @@ body.dark-mode .history-plot svg text {
   width: 100%;
   height: auto;
 }
+
+.context-menu {
+  position: fixed;
+  display: none;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 1000;
+  color: #333; /* Base text color for light mode */
+}
+
+.context-menu-item {
+  padding: 8px 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+
+.context-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+/* Dark mode support */
+body.dark-mode .context-menu {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: #fff; /* Text color for dark mode */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+}
+
+body.dark-mode .context-menu-item:hover {
+  background-color: #404040;
+}
+
+/* Ensure colored items (like "Mark for Review") remain visible in both modes */
+body.dark-mode .context-menu-item[style*="color: #f44336"] {
+  color: #ff6b6b !important; /* Brighter red for dark mode */
+}
