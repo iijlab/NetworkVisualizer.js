@@ -41,21 +41,6 @@ body {
   transition: stroke-width 0.2s;
 }
 
-/* Tooltip */
-.tooltip {
-  position: absolute;
-  padding: 8px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  pointer-events: none;
-  display: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  z-index: 100;
-}
-
 /* Metric Legend */
 .details-legend {
   border-top: 1px solid #ddd;
@@ -297,12 +282,6 @@ body.dark-mode .detail-section table td:first-child {
 body.dark-mode .chart-container {
   background: #222;
   border-color: #404040;
-}
-
-body.dark-mode .tooltip {
-  background: #2d2d2d;
-  border-color: #404040;
-  color: #fff;
 }
 
 body.dark-mode .node-label {

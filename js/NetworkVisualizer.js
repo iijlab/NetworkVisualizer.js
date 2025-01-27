@@ -412,7 +412,6 @@ class NetworkVisualizer {
             }
             this.selectedElement = null;
         }
-        this.hideTooltip();
         const svg = document.querySelector(this.containerId);
         while (svg.firstChild) {
             svg.removeChild(svg.firstChild);
@@ -582,8 +581,6 @@ class NetworkVisualizer {
 
         // Add event listeners to both line and arrowhead
         [linkLine, arrowHead].forEach(element => {
-            element.addEventListener("mouseover", (event) => this.showLinkTooltip(event, link));
-            element.addEventListener("mouseout", () => this.hideTooltip());
             element.addEventListener("click", handleClick);
 
             // Add context menu event listeners
@@ -597,35 +594,6 @@ class NetworkVisualizer {
         group.appendChild(linkLine);
         group.appendChild(arrowHead);
         linkGroup.appendChild(group);
-    }
-
-    showNodeTooltip(event, d) {
-        const tooltip = document.getElementById("tooltip");
-        tooltip.innerHTML = `
-            <strong>Node ${d.id}</strong><br>
-            Type: ${d.type}<br>
-            Resource Allocation: ${(d.metrics?.current?.allocation ?? 0).toFixed(2)}%
-            ${d.type === "cluster" ? "<br>(Click to explore)" : ""}
-        `;
-        tooltip.style.left = (event.pageX + 10) + "px";
-        tooltip.style.top = (event.pageY - 10) + "px";
-        tooltip.style.display = "block";
-    }
-
-    showLinkTooltip(event, d) {
-        const tooltip = document.getElementById("tooltip");
-        tooltip.innerHTML = `
-            <strong>${d.source} → ${d.target}</strong><br>
-            Allocation: ${(d.metrics?.current?.allocation ?? 0).toFixed(2)}%<br>
-            Capacity: ${d.metrics?.current?.capacity ?? 'N/A'}
-        `;
-        tooltip.style.left = (event.pageX + 10) + "px";
-        tooltip.style.top = (event.pageY - 10) + "px";
-        tooltip.style.display = "block";
-    }
-
-    hideTooltip() {
-        document.getElementById("tooltip").style.display = "none";
     }
 
     updateDetailsWithNetworkOverview() {
@@ -760,7 +728,6 @@ class NetworkVisualizer {
 
             const handleNodeClick = async (event) => {
                 event.stopPropagation();
-                this.hideTooltip();
 
                 // If clicking the same node, unselect it
                 if (this.selectedElement === circle) {
@@ -789,8 +756,6 @@ class NetworkVisualizer {
             };
 
             // Add event listeners for basic interactions
-            nodeG.addEventListener("mouseover", (event) => this.showNodeTooltip(event, node));
-            nodeG.addEventListener("mouseout", () => this.hideTooltip());
             nodeG.addEventListener("click", handleNodeClick);
 
             // Add context menu event listeners
