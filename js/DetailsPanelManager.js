@@ -48,7 +48,6 @@ class DetailsPanelManager {
     }
 
     setupResizeHandle() {
-        // Create resize handle
         const handle = document.createElement('div');
         handle.className = 'resize-handle';
         this.panel.appendChild(handle);
@@ -64,18 +63,16 @@ class DetailsPanelManager {
             this.panel.classList.add('dragging');
             document.addEventListener('mousemove', doResize);
             document.addEventListener('mouseup', stopResize);
-            e.preventDefault(); // Prevent text selection
+            e.preventDefault();
         };
 
         const doResize = (e) => {
             if (!isResizing) return;
 
             const newWidth = startWidth - (e.clientX - startX);
-            // Clamp width between min and max values
             const clampedWidth = Math.min(Math.max(newWidth, 250), 800);
             this.panel.style.width = `${clampedWidth}px`;
 
-            // Throttle plot updates during resize
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 this.updateActivePlot();
@@ -87,21 +84,116 @@ class DetailsPanelManager {
             this.panel.classList.remove('dragging');
             document.removeEventListener('mousemove', doResize);
             document.removeEventListener('mouseup', stopResize);
-            this.updateActivePlot(); // Final update of plots
+            this.updateActivePlot();
         };
 
         handle.addEventListener('mousedown', startResize);
     }
 
+    createMetricsPlot(network, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        // Prepare data
+        const timePoints = network.nodes[0]?.metrics?.history?.map(h => new Date(h.timestamp)) || [];
+        const data = [];
+
+        // Add node metrics history
+        network.nodes.forEach(node => {
+            node.metrics.history.forEach((point, index) => {
+                data.push({
+                    timestamp: new Date(point.timestamp),
+                    id: node.id,
+                    type: `${node.type} node`,
+                    allocation: point.allocation,
+                    timeIndex: index
+                });
+            });
+        });
+
+        // Add link metrics history
+        network.links.forEach(link => {
+            link.metrics.history.forEach((point, index) => {
+                data.push({
+                    timestamp: new Date(point.timestamp),
+                    id: `${link.source}->${link.target}`,
+                    type: 'link',
+                    allocation: point.allocation,
+                    timeIndex: index
+                });
+            });
+        });
+
+        const plot = Plot.plot({
+            style: {
+                background: "transparent",
+                color: "currentColor",
+                fontSize: "12px",
+                fontFamily: "Arial, sans-serif"
+            },
+            width: container.clientWidth - 40,
+            height: 400,
+            marginLeft: 60,
+            marginRight: 100, // Increased margin for legend
+            marginTop: 20,
+            marginBottom: 40,
+            y: {
+                label: "Allocation (%)",
+                domain: [0, 100],
+                grid: true
+            },
+            x: {
+                label: "Time",
+                type: "time",
+                tickFormat: "%H:%M"
+            },
+            color: {
+                domain: ["cluster node", "leaf node", "link"],
+                range: ["#2196f3", "#4caf50", "#ff9800"]
+            },
+            marks: [
+                Plot.ruleY([0, 25, 50, 75, 100], {
+                    stroke: "#ddd",
+                    strokeDasharray: "4,4"
+                }),
+                Plot.line(data, {
+                    x: "timestamp",
+                    y: "allocation",
+                    stroke: "type",
+                    strokeWidth: 2,
+                    z: "id", // Group by id to create separate lines
+                    tip: true,
+                    title: d => `${d.id}\nType: ${d.type}\nAllocation: ${d.allocation.toFixed(2)}%`
+                }),
+                Plot.text(data.filter(d => d.timeIndex === data[0].timeIndex), {
+                    x: "timestamp",
+                    y: "allocation",
+                    z: "id",
+                    text: "id",
+                    dx: 5,
+                    dy: 0,
+                    fontSize: 10,
+                    textAnchor: "start"
+                })
+            ],
+            // Add a legend
+            caption: Plot.legend({
+                color: {
+                    domain: ["cluster node", "leaf node", "link"],
+                    range: ["#2196f3", "#4caf50", "#ff9800"]
+                }
+            })
+        });
+
+        container.appendChild(plot);
+    }
     updateActivePlot() {
-        // Find all plot containers
         const plotContainers = this.panel.querySelectorAll('.history-plot');
         plotContainers.forEach(container => {
             if (container.firstChild) {
-                // Get the current data and recreate the plot
                 const existingPlot = container.querySelector('figure');
                 if (existingPlot) {
-                    const width = container.clientWidth - 30; // Account for padding
+                    const width = container.clientWidth - 30;
                     const metricName = container.dataset.metricName;
                     const history = JSON.parse(container.dataset.history);
                     const plot = this.createHistoryPlotElement(history, metricName, width);
@@ -111,6 +203,13 @@ class DetailsPanelManager {
                 }
             }
         });
+
+        // Also update metrics plot if it exists
+        const metricsPlot = document.getElementById('metrics-plot');
+        if (metricsPlot && this.currentNetwork) {
+            metricsPlot.innerHTML = '';
+            this.createMetricsPlot(this.currentNetwork, 'metrics-plot');
+        }
     }
 
     createHistoryPlot(history, metricName) {
@@ -120,7 +219,6 @@ class DetailsPanelManager {
 
         const plotDiv = document.createElement('div');
         plotDiv.className = 'history-plot';
-        // Store data for resize updates
         plotDiv.dataset.history = JSON.stringify(history);
         plotDiv.dataset.metricName = metricName;
 
@@ -138,8 +236,7 @@ class DetailsPanelManager {
             timestamp: new Date(point.timestamp)
         }));
 
-        // Use provided width or calculate from container
-        const plotWidth = width || (this.panel.clientWidth - 60); // Account for padding
+        const plotWidth = width || (this.panel.clientWidth - 60);
 
         return Plot.plot({
             style: {
@@ -186,6 +283,7 @@ class DetailsPanelManager {
     }
 
     updateNetworkOverview(network) {
+        this.currentNetwork = network;
         const stats = NetworkStats.calculate(network);
         const metricName = this.config.visualization.metric;
         const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
@@ -230,7 +328,13 @@ class DetailsPanelManager {
                 </table>
             </div>
             ${this.renderCriticalMetrics(stats)}
+            <div class="detail-section">
+                <h3>${metricTitle} Distribution</h3>
+                <div id="metrics-plot" style="width: 100%; margin-top: 20px;"></div>
+            </div>
         `;
+
+        this.createMetricsPlot(network, 'metrics-plot');
     }
 
     updateNodeDetails(node, clusterNetwork = null) {
