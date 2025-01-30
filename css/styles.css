@@ -1,436 +1,418 @@
-/* Base layout */
-body {
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-  overflow: hidden;
-}
-
-.container {
-  display: flex;
-  width: 100vw;
-  height: 100vh;
-}
-
-/* Visualization container */
-.visualization-container {
-  flex: 1;
-  position: relative;
-  min-width: 0;
-  padding-top: 40px; /* Account for navigation bar */
-}
-
-#network {
-  width: 100%;
-  height: 100%;
-}
-
-/* Network elements */
-.node {
-  cursor: pointer;
-}
-
-.node-label {
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  pointer-events: none;
-}
-
-.link-half {
-  cursor: pointer;
-  transition: stroke-width 0.2s;
-}
-
-/* Metric Legend */
-.details-legend {
-  border-top: 1px solid #ddd;
-  padding: 15px;
-  background: white;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  margin: 5px 0;
-}
-
-.legend-color {
-  width: 30px;
-  height: 10px;
-  margin-right: 10px;
-  border-radius: 2px;
-}
-
-/* Details Panel */
-.details-panel {
-  width: 300px;
-  background: white;
-  border-left: 1px solid #ddd;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.details-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 15px;
-}
-
-.no-selection-message {
-  color: #666;
-  text-align: center;
-  margin-top: 20px;
-  font-style: italic;
-}
-
-.detail-section {
-  margin-bottom: 20px;
-  background: white;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.detail-section:last-child {
-  margin-bottom: 0;
-}
-
-.detail-section h3 {
-  margin: 0 0 10px 0;
-  font-size: 16px;
-  color: #333;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #eee;
-}
-
-.detail-section table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.detail-section table td {
-  padding: 8px 0;
-  line-height: 1.4;
-}
-
-.detail-section table td:first-child {
-  color: #666;
-  width: 40%;
-  padding-right: 10px;
-}
-
-.detail-section table td:last-child {
-  font-weight: 500;
-}
-
-/* Chart container */
-.chart-container {
-  margin: 15px 0;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 10px;
-  background: #f8f9fa;
-}
-
-/* Navigation bar */
-.navigation-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 40px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #ddd;
-  padding: 0 15px;
-  display: flex;
-  align-items: center;
-}
-
-.network-path {
-  display: flex;
-  align-items: center;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.path-segment {
-  white-space: nowrap;
-  color: #666;
-  cursor: pointer;
-  padding: 0 4px;
-}
-
-.path-segment:hover {
-  color: #333;
-}
-
-.path-separator {
-  color: #999;
-  margin: 0 4px;
-}
-
-.path-segment.truncated {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 150px;
-}
-
-/* Theme toggle */
-.theme-toggle {
-  background: none;
-  border: 1px solid rgba(0,0,0,0.1);
-  cursor: pointer;
-  padding: 8px;
-  margin-right: 16px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.theme-toggle:hover {
-  background: rgba(0,0,0,0.05);
-}
-
-.theme-toggle .moon-icon {
-  display: none;
-}
-
-/* Loading states */
-.loading {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.loading-spinner {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Dark mode */
-body.dark-mode {
-  background: #1a1a1a;
-  color: #fff;
-}
-
-body.dark-mode .navigation-bar {
-  background: #2d2d2d;
-  border-bottom-color: #404040;
-}
-
-body.dark-mode .theme-toggle {
-  border-color: rgba(255,255,255,0.2);
-}
-
-body.dark-mode .theme-toggle:hover {
-  background: rgba(255,255,255,0.1);
-}
-
-body.dark-mode .theme-toggle .sun-icon {
-  display: none;
-}
-
-body.dark-mode .theme-toggle .moon-icon {
-  display: block;
-}
-
-body.dark-mode .path-segment {
-  color: #bbb;
-}
-
-body.dark-mode .path-segment:hover {
-  color: #fff;
-}
-
-body.dark-mode .path-separator {
-  color: #666;
-}
-
-body.dark-mode .details-panel {
-  background: #2d2d2d;
-  border-left-color: #404040;
-}
-
-body.dark-mode .details-legend {
-  background: #2d2d2d;
-  border-top-color: #404040;
-}
-
-body.dark-mode .detail-section {
-  background: #2d2d2d;
-}
-
-body.dark-mode .detail-section h3 {
-  color: #fff;
-  border-bottom-color: #404040;
-}
-
-body.dark-mode .detail-section table td:first-child {
-  color: #bbb;
-}
-
-body.dark-mode .chart-container {
-  background: #222;
-  border-color: #404040;
-}
-
-body.dark-mode .node-label {
-  fill: #fff;
-  color: #fff;
-}
-
-body.dark-mode .link-selection,
-body.dark-mode circle[class*="selection"] {
-   stroke: rgba(255, 255, 255, 0.8) !important;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .details-panel {
-    width: 250px;
+/* ==========================================================================
+   Base styles and layout
+   ========================================================================== */
+   body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
   }
-}
 
-/* Print styles */
-@media print {
-  .details-panel {
+  .container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  /* ==========================================================================
+     Navigation Bar
+     ========================================================================== */
+  .navigation-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+  }
+
+  .network-path {
+    display: flex;
+    align-items: center;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .path-segment {
+    white-space: nowrap;
+    color: #666;
+    cursor: pointer;
+    padding: 0 4px;
+  }
+
+  .path-segment:hover {
+    color: #333;
+  }
+
+  .path-segment.truncated {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+  }
+
+  .path-separator {
+    color: #999;
+    margin: 0 4px;
+  }
+
+  /* ==========================================================================
+     Network Visualization
+     ========================================================================== */
+  .visualization-container {
+    position: relative;
+    height: calc(100vh - 40px);
+    padding: 0;
+  }
+
+  #network {
     width: 100%;
-    border: none;
+    height: 100%;
+    display: block;
   }
 
-  .chart-container {
-    break-inside: avoid;
+  .node {
+    cursor: pointer;
   }
 
-  .details-legend {
-    position: static;
-    margin: 20px;
-    break-inside: avoid;
+  .node-label {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    pointer-events: none;
   }
-}
 
-.history-plot {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 15px;
-  margin: 10px 0;
-  overflow: hidden;
-}
+  .link-half {
+    cursor: pointer;
+    transition: stroke-width 0.2s;
+  }
 
-.history-plot svg {
-  width: 100%;
-  height: auto;
-  min-height: 200px;
-}
+  /* ==========================================================================
+     Details Panel
+     ========================================================================== */
+  .details-panel {
+    position: relative;
+    background: white;
+    border-left: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 40px);
+    transition: none;
+    margin: 0;
+  }
 
-/* Dark mode support */
-body.dark-mode .history-plot {
-  background: #2d2d2d;
-  border-color: #404040;
-}
+  .details-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+  }
 
-body.dark-mode .history-plot svg {
-  filter: invert(1) hue-rotate(180deg);
-}
+  .detail-section {
+    margin-bottom: 20px;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+  }
 
-/* Make sure SVG text remains readable in dark mode */
-body.dark-mode .history-plot svg text {
-  fill: #fff;
-}
+  .detail-section:last-child {
+    margin-bottom: 0;
+  }
 
-/* Print optimization */
-@media print {
+  .detail-section h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .detail-section table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .detail-section table td {
+    padding: 8px 0;
+    line-height: 1.4;
+  }
+
+  .detail-section table td:first-child {
+    color: #666;
+    width: 40%;
+    padding-right: 10px;
+  }
+
+  .detail-section table td:last-child {
+    font-weight: 500;
+  }
+
+  /* Resize Handle */
+  .resize-handle {
+    position: absolute;
+    left: -5px;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    cursor: col-resize;
+    z-index: 10;
+  }
+
+  .details-panel.dragging {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* ==========================================================================
+     Charts and Metrics
+     ========================================================================== */
   .history-plot {
+    width: 100%;
+    height: auto;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 10px 0;
+    overflow: hidden;
+  }
+
+  .history-plot svg {
+    width: 100%;
+    height: auto;
+    min-height: 200px;
+  }
+
+  .history-plot > div {
+    width: 100%;
+    height: auto;
+  }
+
+  /* ==========================================================================
+     Legend
+     ========================================================================== */
+  .details-legend {
+    border-top: 1px solid #ddd;
+    padding: 15px;
+    background: white;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+  }
+
+  .legend-color {
+    width: 30px;
+    height: 10px;
+    margin-right: 10px;
+    border-radius: 2px;
+  }
+
+  /* ==========================================================================
+     Context Menu
+     ========================================================================== */
+  .context-menu {
+    position: fixed;
+    display: none;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+    color: #333;
+  }
+
+  .context-menu-item {
+    padding: 8px 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+  }
+
+  .context-menu-item:hover {
+    background-color: #f5f5f5;
+  }
+
+  /* ==========================================================================
+     Theme Toggle
+     ========================================================================== */
+  .theme-toggle {
+    background: none;
+    border: 1px solid rgba(0,0,0,0.1);
+    cursor: pointer;
+    padding: 8px;
+    margin-right: 16px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .theme-toggle:hover {
+    background: rgba(0,0,0,0.05);
+  }
+
+  .theme-toggle .moon-icon {
+    display: none;
+  }
+
+  /* ==========================================================================
+     Dark Mode
+     ========================================================================== */
+  body.dark-mode {
+    background: #1a1a1a;
+    color: #fff;
+  }
+
+  body.dark-mode .navigation-bar {
+    background: #2d2d2d;
+    border-bottom-color: #404040;
+  }
+
+  body.dark-mode .theme-toggle {
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  body.dark-mode .theme-toggle:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  body.dark-mode .theme-toggle .sun-icon {
+    display: none;
+  }
+
+  body.dark-mode .theme-toggle .moon-icon {
+    display: block;
+  }
+
+  body.dark-mode .path-segment {
+    color: #bbb;
+  }
+
+  body.dark-mode .path-segment:hover {
+    color: #fff;
+  }
+
+  body.dark-mode .path-separator {
+    color: #666;
+  }
+
+  body.dark-mode .details-panel,
+  body.dark-mode .details-legend,
+  body.dark-mode .detail-section {
+    background: #2d2d2d;
+  }
+
+  body.dark-mode .details-panel {
+    border-left-color: #404040;
+  }
+
+  body.dark-mode .details-legend {
+    border-top-color: #404040;
+  }
+
+  body.dark-mode .detail-section h3 {
+    color: #fff;
+    border-bottom-color: #404040;
+  }
+
+  body.dark-mode .detail-section table td:first-child {
+    color: #bbb;
+  }
+
+  body.dark-mode .history-plot {
+    background: #2d2d2d;
+    border-color: #404040;
+  }
+
+  body.dark-mode .history-plot svg {
+    filter: invert(1) hue-rotate(180deg);
+  }
+
+  body.dark-mode .history-plot svg text {
+    fill: #fff;
+  }
+
+  body.dark-mode .node-label {
+    fill: #fff;
+    color: #fff;
+  }
+
+  body.dark-mode .link-selection,
+  body.dark-mode circle[class*="selection"] {
+     stroke: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  body.dark-mode .context-menu {
+    background: #2d2d2d;
+    border-color: #404040;
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  }
+
+  body.dark-mode .context-menu-item:hover {
+    background-color: #404040;
+  }
+
+  body.dark-mode .context-menu-item[style*="color: #f44336"] {
+    color: #ff6b6b !important;
+  }
+
+  /* ==========================================================================
+     Media Queries
+     ========================================================================== */
+  @media screen and (max-width: 39.9375em) {
+    .visualization-container {
+      height: calc(50vh - 2.5rem); /* Account for title bar */
+      margin: 0;
+    }
+
+    .details-panel {
+      height: 50vh;
+      margin: 0;
+      border-left: none;
+      border-top: 1px solid #ddd;
+      overflow-y: auto;
+    }
+
+    .off-canvas-content {
+      height: calc(100vh - 2.5rem); /* Account for title bar */
+      overflow-y: hidden;
+    }
+  }
+
+  @media screen and (min-width: 40em) {
+    .off-canvas-content {
+      height: 100vh;
+      overflow-y: hidden;
+    }
+  }
+
+  /* ==========================================================================
+     Print Styles
+     ========================================================================== */
+  @media print {
+    .details-panel {
+      width: 100%;
+      border: none;
+    }
+
+    .chart-container {
+      break-inside: avoid;
+    }
+
+    .details-legend {
+      position: static;
+      margin: 20px;
+      break-inside: avoid;
+    }
+
+    .history-plot {
       break-inside: avoid;
       border: 1px solid #999;
+    }
   }
-}
-
-/* Resize handle */
-.resize-handle {
-  position: absolute;
-  left: -5px;
-  top: 0;
-  bottom: 0;
-  width: 10px;
-  cursor: col-resize;
-  z-index: 10;
-}
-
-/* Add position relative to panel for absolute positioning of handle */
-.details-panel {
-  position: relative;
-  min-width: 250px; /* Minimum width */
-  max-width: 800px; /* Maximum width */
-  transition: none; /* Remove any transitions that might interfere with dragging */
-}
-
-/* Style for when dragging */
-.details-panel.dragging {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* Add this to ensure plots resize smoothly */
-.history-plot {
-  width: 100%;
-  height: auto;
-  overflow: hidden;
-}
-
-/* Make sure the plot container resizes smoothly */
-.history-plot > div {
-  width: 100%;
-  height: auto;
-}
-
-.context-menu {
-  position: fixed;
-  display: none;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 5px 0;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  z-index: 1000;
-  color: #333; /* Base text color for light mode */
-}
-
-.context-menu-item {
-  padding: 8px 20px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background-color 0.2s;
-}
-
-.context-menu-item:hover {
-  background-color: #f5f5f5;
-}
-
-/* Dark mode support */
-body.dark-mode .context-menu {
-  background: #2d2d2d;
-  border-color: #404040;
-  color: #fff; /* Text color for dark mode */
-  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-}
-
-body.dark-mode .context-menu-item:hover {
-  background-color: #404040;
-}
-
-/* Ensure colored items (like "Mark for Review") remain visible in both modes */
-body.dark-mode .context-menu-item[style*="color: #f44336"] {
-  color: #ff6b6b !important; /* Brighter red for dark mode */
-}

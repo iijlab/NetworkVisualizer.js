@@ -1,10 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="no-js" lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Network Visualization (Mock Data)</title>
+
+    <!-- Foundation CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/foundation-sites@6.8.1/dist/css/foundation.min.css"
+      crossorigin="anonymous"
+    />
+
+    <!-- Your custom styles -->
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/menu.css" />
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <script type="module">
       import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
@@ -12,14 +24,55 @@
     </script>
   </head>
   <body>
-    <div class="container">
-      <div class="visualization-container">
-        <svg id="network"></svg>
+    <!-- Small screen menu bar -->
+    <div class="title-bar show-for-small-only">
+      <button class="menu-icon" type="button" data-toggle="offCanvas"></button>
+      <div class="title-bar-title">Menu</div>
+    </div>
+
+    <!-- Off-canvas wrapper -->
+    <div class="off-canvas-wrapper">
+      <!-- Off-canvas menu -->
+      <div
+        class="off-canvas position-left reveal-for-medium"
+        id="offCanvas"
+        data-off-canvas
+        data-transition="overlap"
+      >
+        <div class="top-bar">
+          <button
+            class="close-button"
+            aria-label="Close menu"
+            type="button"
+            data-close
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <ul class="vertical dropdown menu" id="menu" data-dropdown-menu>
+            <li class="menu-text">Network Analysis</li>
+            <li class="is-active"><a href="#overview">Overview</a></li>
+            <li><a href="#nodes">Nodes</a></li>
+            <li><a href="#edges">Edges</a></li>
+            <li><a href="#metrics">Metrics</a></li>
+            <li><a href="#settings">Settings</a></li>
+          </ul>
+        </div>
       </div>
-      <div id="details-panel" class="details-panel">
-        <div class="details-content">
-          <div class="no-selection-message">
-            Select a node or link to view details
+
+      <!-- Main content -->
+      <div class="off-canvas-content" data-off-canvas-content>
+        <div class="grid-x">
+          <div class="cell small-12 medium-8 large-9 visualization-container">
+            <svg id="network"></svg>
+          </div>
+          <div class="cell small-12 medium-4 large-3">
+            <div id="details-panel" class="details-panel">
+              <div class="details-content">
+                <div class="no-selection-message">
+                  Select a node or link to view details
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -28,6 +81,20 @@
     <!-- Set mock data flag before loading any scripts -->
     <script>
       window.USE_MOCK_DATA = true;
+    </script>
+
+    <!-- Foundation required JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/foundation-sites@6.8.1/dist/js/foundation.min.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Initialize Foundation -->
+    <script>
+      $(document).ready(function () {
+        $(document).foundation();
+      });
     </script>
 
     <!-- Load the application scripts -->

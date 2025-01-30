@@ -1,10 +1,11 @@
 class DetailsPanelManager {
+    // Initialization & Setup
     constructor(panelElement, config) {
         this.panel = panelElement;
         this.config = config;
         this.contentElement = this.panel.querySelector('.details-content');
         this.setupLegend();
-        this.setupResizeHandle();
+        this.setupResponsiveUpdates();
     }
 
     setupLegend() {
@@ -47,49 +48,18 @@ class DetailsPanelManager {
         this.contentElement.insertAdjacentElement('afterend', legendDiv);
     }
 
-    setupResizeHandle() {
-        const handle = document.createElement('div');
-        handle.className = 'resize-handle';
-        this.panel.appendChild(handle);
-
-        let startX, startWidth;
-        let isResizing = false;
+    setupResponsiveUpdates() {
+        // Update plots when window is resized
         let resizeTimeout;
-
-        const startResize = (e) => {
-            startX = e.clientX;
-            startWidth = parseInt(document.defaultView.getComputedStyle(this.panel).width, 10);
-            isResizing = true;
-            this.panel.classList.add('dragging');
-            document.addEventListener('mousemove', doResize);
-            document.addEventListener('mouseup', stopResize);
-            e.preventDefault();
-        };
-
-        const doResize = (e) => {
-            if (!isResizing) return;
-
-            const newWidth = startWidth - (e.clientX - startX);
-            const clampedWidth = Math.min(Math.max(newWidth, 250), 800);
-            this.panel.style.width = `${clampedWidth}px`;
-
+        window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 this.updateActivePlot();
-            }, 50);
-        };
-
-        const stopResize = () => {
-            isResizing = false;
-            this.panel.classList.remove('dragging');
-            document.removeEventListener('mousemove', doResize);
-            document.removeEventListener('mouseup', stopResize);
-            this.updateActivePlot();
-        };
-
-        handle.addEventListener('mousedown', startResize);
+            }, 250);
+        });
     }
 
+    // Plot Management
     createMetricsPlot(network, containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -187,6 +157,7 @@ class DetailsPanelManager {
 
         container.appendChild(plot);
     }
+
     updateActivePlot() {
         const plotContainers = this.panel.querySelectorAll('.history-plot');
         plotContainers.forEach(container => {
@@ -236,7 +207,7 @@ class DetailsPanelManager {
             timestamp: new Date(point.timestamp)
         }));
 
-        const plotWidth = width || (this.panel.clientWidth - 60);
+        const plotWidth = width || (this.panel.clientWidth - 30);
 
         return Plot.plot({
             style: {
@@ -282,6 +253,7 @@ class DetailsPanelManager {
         });
     }
 
+    // Panel Content Updates
     updateNetworkOverview(network) {
         this.currentNetwork = network;
         const stats = NetworkStats.calculate(network);
@@ -463,6 +435,7 @@ class DetailsPanelManager {
         `;
     }
 
+    // Helper Methods
     renderCriticalMetrics(stats) {
         if (!stats.criticalMetrics.nodes.length && !stats.criticalMetrics.links.length) {
             return '';
