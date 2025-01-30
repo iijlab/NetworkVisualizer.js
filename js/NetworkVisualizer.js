@@ -33,6 +33,9 @@ class NetworkVisualizer {
         this.detailsPanel = document.getElementById('details-panel');
         this.detailsPanel.classList.remove('hidden'); // Always show panel
 
+        // Initialize resize observer
+        this.setupResizeHandling();
+
         // Create the details panel manager
         this.detailsPanelManager = new DetailsPanelManager(this.detailsPanel, this.config);
 
@@ -350,6 +353,32 @@ class NetworkVisualizer {
 
 
 
+    setupResizeHandling() {
+        // Create resize observer for the container
+        const container = document.querySelector(this.containerId);
+        if (!container) return;
+
+        // Debounce the resize handler
+        let resizeTimeout;
+        const handleResize = () => {
+            if (resizeTimeout) {
+                clearTimeout(resizeTimeout);
+            }
+            resizeTimeout = setTimeout(() => {
+                if (this.currentNetwork) {
+                    this.createVisualization(this.currentNetwork);
+                }
+            }, 250); // Debounce for 250ms
+        };
+
+        // Create and attach ResizeObserver
+        const resizeObserver = new ResizeObserver(handleResize);
+        resizeObserver.observe(container);
+
+        // Also handle window resize events
+        window.addEventListener('resize', handleResize);
+    }
+
     mergeConfig(defaultConfig, userConfig) {
         return {
             ...defaultConfig,
@@ -635,6 +664,10 @@ class NetworkVisualizer {
             svg.removeChild(svg.firstChild);
         }
 
+        // Set SVG to be responsive
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '100%');
+
         // Calculate the bounding box of the network
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         data.nodes.forEach(node => {
@@ -644,31 +677,27 @@ class NetworkVisualizer {
             maxY = Math.max(maxY, node.y);
         });
 
-        // Calculate network dimensions
+        // Add padding to prevent nodes from touching edges
+        const padding = 50;
+        minX -= padding;
+        minY -= padding;
+        maxX += padding;
+        maxY += padding;
+
+        // Calculate network dimensions with padding
         const networkWidth = maxX - minX;
         const networkHeight = maxY - minY;
-        const networkCenterX = minX + networkWidth / 2;
-        const networkCenterY = minY + networkHeight / 2;
 
-        // Get SVG dimensions
-        const svgRect = svg.getBoundingClientRect();
-        const svgCenterX = svgRect.width / 2;
-        const svgCenterY = svgRect.height / 2;
+        // Set viewBox to encompass entire network with padding
+        svg.setAttribute('viewBox', `${minX} ${minY} ${networkWidth} ${networkHeight}`);
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
-        // Calculate translation to center
-        const translateX = svgCenterX - networkCenterX;
-        const translateY = svgCenterY - networkCenterY;
-
-        // Create a container group for all elements
-        const mainGroup = document.createElementNS(svgNS, "g");
-        mainGroup.setAttribute("transform", `translate(${translateX}, ${translateY})`);
-
+        // Create groups for organizing elements
         const linkGroup = document.createElementNS(svgNS, "g");
         const nodeGroup = document.createElementNS(svgNS, "g");
 
-        mainGroup.appendChild(linkGroup);
-        mainGroup.appendChild(nodeGroup);
-        svg.appendChild(mainGroup);
+        svg.appendChild(linkGroup);
+        svg.appendChild(nodeGroup);
 
         // Process links
         const linkPairs = new Map();
