@@ -347,10 +347,20 @@
     background: #1a1a1a;
   }
 
-  /* Override cluster node styles in dark mode */
-  body.dark-mode .node.cluster circle {
+  /* Override cluster node fill in dark mode while preserving stroke */
+  body.dark-mode .node circle[fill="white"] {
     fill: #1a1a1a !important;
-    stroke: #fff !important;
+  }
+
+  /* Plot tooltip styles for dark mode */
+  body.dark-mode .plot-tooltip {
+    background: #2d2d2d !important;
+    color: #fff !important;
+    border: 1px solid #404040 !important;
+    padding: 8px !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    white-space: pre-line !important;
   }
 
   body.dark-mode .details-panel,

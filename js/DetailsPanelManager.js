@@ -99,7 +99,12 @@ class DetailsPanelManager {
                 background: "transparent",
                 color: "currentColor",
                 fontSize: "12px",
-                fontFamily: "Arial, sans-serif"
+                fontFamily: "Arial, sans-serif",
+                ".plot-tooltip": {
+                    background: "#333",
+                    color: "white",
+                    border: "1px solid #555"
+                }
             },
             width: container.clientWidth - 40,
             height: 400,
@@ -214,7 +219,12 @@ class DetailsPanelManager {
                 background: "transparent",
                 color: "currentColor",
                 fontSize: "12px",
-                fontFamily: "Arial, sans-serif"
+                fontFamily: "Arial, sans-serif",
+                ".plot-tooltip": {
+                    background: "#333",
+                    color: "white",
+                    border: "1px solid #555"
+                }
             },
             width: plotWidth,
             height: 200,
@@ -241,13 +251,17 @@ class DetailsPanelManager {
                     x: "timestamp",
                     y: "value",
                     stroke: "#2196f3",
-                    strokeWidth: 2
+                    strokeWidth: 2,
+                    tip: true,
+                    title: d => `Value: ${d.value.toFixed(2)}%\nTime: ${d.timestamp.toLocaleTimeString()}`
                 }),
                 Plot.dot(data, {
                     x: "timestamp",
                     y: "value",
                     fill: "#2196f3",
-                    r: 3
+                    r: 3,
+                    tip: true,
+                    title: d => `Value: ${d.value.toFixed(2)}%\nTime: ${d.timestamp.toLocaleTimeString()}`
                 })
             ]
         });
