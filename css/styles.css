@@ -89,6 +89,13 @@
     background: white;
   }
 
+  /* Cluster node specific styles */
+  .node.cluster {
+    fill: white;
+    stroke: #333;
+    stroke-width: 2px;
+  }
+
   .details-container {
     height: 100%;
     position: relative;
@@ -336,10 +343,46 @@
     color: #666;
   }
 
+  body.dark-mode .visualization-container {
+    background: #1a1a1a;
+  }
+
+  /* Override cluster node styles in dark mode */
+  body.dark-mode .node.cluster circle {
+    fill: #1a1a1a !important;
+    stroke: #fff !important;
+  }
+
   body.dark-mode .details-panel,
-  body.dark-mode .details-legend,
+  body.dark-mode .details-legend {
+    background: #2d2d2d;
+  }
+
   body.dark-mode .detail-section {
     background: #2d2d2d;
+    margin-bottom: 8px;
+  }
+
+  body.dark-mode .detail-section:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Alternating backgrounds for table rows in dark mode */
+  body.dark-mode .detail-section table tr td {
+    background: #1a1a1a;
+    padding: 12px 8px;
+  }
+
+  body.dark-mode .detail-section table tr:nth-child(even) td {
+    background: #262626;
+  }
+
+  body.dark-mode .detail-section table td:first-child {
+    padding-left: 16px;
+  }
+
+  body.dark-mode .detail-section table td:last-child {
+    padding-right: 16px;
   }
 
   body.dark-mode .details-panel {
