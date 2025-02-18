@@ -116,10 +116,15 @@ body {
 
 .details-section {
   height: 100%;
-  overflow-y: auto;
   padding: 1rem;
   background: white;
   border-left: 1px solid #ddd;
+}
+
+@media screen and (min-width: 64em) {
+  .details-section {
+    overflow-y: auto;
+  }
 }
 
 /* Legend styles */
@@ -352,7 +357,6 @@ body {
 /* Details Section */
 .details-section {
   height: 100%;
-  overflow-y: auto;
   padding: 1rem;
   background: white;
   border-left: 1px solid #ddd;
@@ -366,15 +370,24 @@ body {
 }
 
 .metrics-container {
-  overflow-y: auto;
-  height: calc(100% - 140px); /* Account for Network Overview card + padding */
-  padding-right: 5px; /* Space for scrollbar */
+  padding-right: 5px;
+}
+
+@media screen and (min-width: 64em) {
+  .details-section {
+    overflow-y: auto;
+  }
+
+  .metrics-container {
+    overflow-y: auto;
+    height: calc(100% - 140px);
+  }
 }
 
 @media screen and (max-width: 63.9375em) {
   .metrics-container {
     height: auto;
-    max-height: none;
+    overflow: visible;
   }
 }
 
@@ -842,6 +855,7 @@ body.dark-mode .context-menu-item[style*="color: #f44336"] {
     min-height: 0;
     border-left: none;
     border-top: 1px solid #ddd;
+    overflow: visible;
   }
 
   .grid-y.medium-grid-frame {
@@ -851,19 +865,24 @@ body.dark-mode .context-menu-item[style*="color: #f44336"] {
   }
 
   .metrics-container {
-    height: auto !important;
-    max-height: none !important;
+    height: auto;
+    overflow: visible;
   }
 }
 
 @media screen and (min-width: 64em) {
+  .visualization-section {
+    height: 100%;
+  }
+
   .details-section {
     height: 100%;
     overflow-y: auto;
   }
 
-  .visualization-section {
-    height: 100%;
+  .metrics-container {
+    overflow-y: auto;
+    height: calc(100% - 140px);
   }
 }
 

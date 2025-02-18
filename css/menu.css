@@ -17,18 +17,36 @@
 #menu {
   background-color: #2b2b2b;
   min-height: 100%;
+  max-width: 250px;
 }
 
 #menu a {
   color: #dddddd;
+  padding: 0.7rem 1rem;
 }
 
-#menu .is-active {
+#menu .is-active > a {
   background-color: #363636;
+  color: #ffffff;
 }
 
-#menu .is-active a {
-  color: #ffffff;
+/* Accordion menu specific styles */
+.accordion-menu .is-accordion-submenu {
+  background-color: #232323;
+}
+
+.accordion-menu .is-accordion-submenu-parent > a::after {
+  border-color: #dddddd transparent transparent;
+}
+
+.accordion-menu .is-accordion-submenu-parent[aria-expanded="true"] > a::after {
+  transform: rotate(180deg);
+  border-color: #ffffff transparent transparent;
+}
+
+.accordion-menu .nested.is-accordion-submenu {
+  margin-left: 0;
+  margin-right: 0;
 }
 
 /* Mobile menu button */
