@@ -3,7 +3,7 @@ class DetailsPanelManager {
     constructor(panelElement, config) {
         this.panel = panelElement;
         this.config = config;
-        this.contentElement = this.panel.querySelector('.details-content');
+        this.contentElement = this.panel.querySelector('.details-container');
         this.setupResponsiveUpdates();
     }
 
