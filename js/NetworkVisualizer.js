@@ -284,12 +284,6 @@ class NetworkVisualizer {
 
 
     setupNavigationBar() {
-        const container = document.querySelector('.visualization-container');
-
-        // Create navigation bar
-        const navBar = document.createElement('div');
-        navBar.className = 'navigation-bar';
-
         // Create theme toggle button
         const themeToggle = document.createElement('button');
         themeToggle.className = 'theme-toggle';
@@ -322,13 +316,9 @@ class NetworkVisualizer {
             </svg>
         `;
 
-        // Create path container
-        const pathContainer = document.createElement('div');
-        pathContainer.className = 'network-path';
-
-        navBar.appendChild(themeToggle);
-        navBar.appendChild(pathContainer);
-        container.insertBefore(navBar, container.firstChild);
+        // Find the existing navigation bar and add the theme toggle
+        const navBar = document.querySelector('.navigation-bar');
+        navBar.insertBefore(themeToggle, navBar.firstChild);
 
         // Setup theme toggle functionality
         themeToggle.addEventListener('click', () => {

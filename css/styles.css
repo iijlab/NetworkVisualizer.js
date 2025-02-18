@@ -138,16 +138,13 @@ body {
      Navigation Bar
      ========================================================================== */
 .navigation-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
   height: 40px;
   background: #f8f9fa;
   border-bottom: 1px solid #ddd;
   padding: 0 15px;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .network-path {
@@ -194,7 +191,7 @@ body {
 }
 
 .main-content-wrapper {
-  height: calc(100vh - 40px); /* Account for title bar */
+  height: 100%;
   position: relative;
   padding-top: 0;
   display: flex;
