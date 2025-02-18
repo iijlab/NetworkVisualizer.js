@@ -1,17 +1,137 @@
 /* ==========================================================================
    Base styles and layout
    ========================================================================== */
+/* Base grid frame styles */
 body {
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Ensure the off-canvas wrapper takes full height */
+.off-canvas-wrapper {
+  height: 100vh;
   overflow: hidden;
 }
 
-.container {
+.off-canvas-content {
+  min-height: 100vh;
+  width: 100%;
+}
+
+.grid-y.medium-grid-frame {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Grid layout fixes */
+.grid-x {
+  width: 100%;
+  margin: 0;
+}
+
+.grid-x.grid-margin-x {
+  width: calc(100% + 1.25rem);
+  margin: 0 -0.625rem;
+}
+
+/* Cell sizing */
+.visualization-cell,
+.details-cell {
+  padding: 0 0.625rem;
+}
+
+/* Adjust content when off-canvas is revealed */
+@media screen and (min-width: 40em) {
+  .off-canvas.position-left.reveal-for-medium ~ .off-canvas-content {
+    width: calc(100% - 250px) !important;
+    margin-left: 250px !important;
+  }
+
+  .off-canvas.position-left.reveal-for-medium
+    ~ .off-canvas-content
+    .grid-y.medium-grid-frame {
+    width: 100%;
+  }
+}
+
+/* Ensure content fills space */
+.height-100 {
+  height: 100%;
+}
+
+.cell.auto {
+  flex: 1 1 0px;
+  min-height: 0;
+}
+
+/* Full height grid */
+.height-100 {
+  height: 100%;
+}
+
+/* Visualization section */
+.visualization-cell {
+  height: 100%;
+}
+
+.visualization-section {
+  height: 100%;
   display: flex;
-  width: 100vw;
-  height: 100vh;
+  flex-direction: column;
+  background: white;
+  overflow: hidden;
+}
+
+.visualization-container {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.visualization-container svg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Details section */
+.details-cell {
+  height: 100%;
+}
+
+.details-section {
+  height: 100%;
+  overflow-y: auto;
+  padding: 1rem;
+  background: white;
+  border-left: 1px solid #ddd;
+}
+
+/* Legend styles */
+.metric-legend {
+  background: white;
+  padding: 1rem;
+  border-top: 1px solid #ddd;
+}
+
+/* Medium and up breakpoint adjustments */
+@media screen and (min-width: 40em) {
+  .off-canvas.position-left.reveal-for-medium ~ .off-canvas-content {
+    height: 100vh;
+  }
+
+  .visualization-section {
+    height: 100%;
+  }
+
+  .details-section {
+    height: 100%;
+  }
 }
 
 /* ==========================================================================

@@ -87,149 +87,153 @@
 
       <!-- Main content -->
       <div class="off-canvas-content" data-off-canvas-content>
-        <div class="content main-content-wrapper">
-          <!-- Main Content Grid -->
-          <div class="grid-container fluid">
-            <div class="grid-x">
+        <div class="grid-y medium-grid-frame">
+          <div class="cell auto">
+            <div class="grid-x grid-margin-x height-100">
               <!-- Network Visualization Section -->
-              <div class="cell small-12 medium-6 large-8">
-                <div class="visualization-section">
-                  <div class="visualization-container">
-                    <svg id="network"></svg>
+              <div class="cell medium-6 large-8 visualization-cell">
+                <div class="grid-y height-100">
+                  <div class="cell auto visualization-section">
+                    <div class="visualization-container">
+                      <svg id="network"></svg>
+                    </div>
                   </div>
-                  <div class="metric-legend">
+                  <div class="cell shrink metric-legend">
                     <h4>Metric Legend</h4>
                     <div class="legend-content">
-                      <div class="legend-item">
-                        <span
-                          class="legend-color"
-                          style="background-color: #1779ba"
-                        ></span>
-                        <span class="legend-label">Metric 1</span>
-                      </div>
-                      <div class="legend-item">
-                        <span
-                          class="legend-color"
-                          style="background-color: #3adb76"
-                        ></span>
-                        <span class="legend-label">Metric 2</span>
-                      </div>
-                      <div class="legend-item">
-                        <span
-                          class="legend-color"
-                          style="background-color: #ffae00"
-                        ></span>
-                        <span class="legend-label">Metric 3</span>
+                      <!-- Legend items remain the same -->
+                        <div class="legend-item">
+                          <span
+                            class="legend-color"
+                            style="background-color: #1779ba"
+                          ></span>
+                          <span class="legend-label">Metric 1</span>
+                        </div>
+                        <div class="legend-item">
+                          <span
+                            class="legend-color"
+                            style="background-color: #3adb76"
+                          ></span>
+                          <span class="legend-label">Metric 2</span>
+                        </div>
+                        <div class="legend-item">
+                          <span
+                            class="legend-color"
+                            style="background-color: #ffae00"
+                          ></span>
+                          <span class="legend-label">Metric 3</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Details Section -->
-              <div class="cell small-12 medium-6 large-4">
-                <div id="details-panel" class="details-section">
-                  <div class="details-content">
-                    <!-- Network Overview -->
-                    <div class="detail-card">
-                      <h3>Network Overview</h3>
-                      <div class="card-content">
-                        <div class="grid-x grid-padding-x">
-                          <div class="cell medium-6">
-                            <p><strong>Nodes:</strong> <span>125</span></p>
-                            <p><strong>Edges:</strong> <span>243</span></p>
-                          </div>
-                          <div class="cell medium-6">
-                            <p><strong>Density:</strong> <span>0.32</span></p>
-                            <p><strong>Clusters:</strong> <span>5</span></p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Metrics -->
-                    <div class="metrics-container">
-                      <!-- Metric 1 -->
+                <!-- Details Section -->
+                <div class="cell medium-6 large-4 details-cell">
+                  <div id="details-panel" class="details-section">
+                    <!-- Details content remains the same -->
+                    <div class="details-content">
+                      <!-- Network Overview -->
                       <div class="detail-card">
-                        <h3>Metric 1 Analysis</h3>
+                        <h3>Network Overview</h3>
                         <div class="card-content">
-                          <div class="metric-summary">
-                            <div class="grid-x grid-padding-x">
-                              <div class="cell medium-6">
-                                <p>
-                                  <strong>Average:</strong> <span>0.75</span>
-                                </p>
-                                <p><strong>Max:</strong> <span>0.95</span></p>
-                              </div>
-                              <div class="cell medium-6">
-                                <p><strong>Min:</strong> <span>0.45</span></p>
-                                <p>
-                                  <strong>Critical:</strong>
-                                  <span>3 nodes</span>
-                                </p>
-                              </div>
+                          <div class="grid-x grid-padding-x">
+                            <div class="cell medium-6">
+                              <p><strong>Nodes:</strong> <span>125</span></p>
+                              <p><strong>Edges:</strong> <span>243</span></p>
                             </div>
-                          </div>
-                          <div class="metric-plot">
-                            <!-- Plot placeholder -->
-                            <div
-                              class="plot-placeholder"
-                              style="
-                                height: 200px;
-                                background: #f0f0f0;
-                                margin: 1rem 0;
-                              "
-                            ></div>
-                          </div>
-                          <div class="critical-elements callout alert">
-                            <strong>Critical Elements:</strong>
-                            <ul>
-                              <li>Node A: 0.95</li>
-                              <li>Node B: 0.92</li>
-                              <li>Node C: 0.90</li>
-                            </ul>
+                            <div class="cell medium-6">
+                              <p><strong>Density:</strong> <span>0.32</span></p>
+                              <p><strong>Clusters:</strong> <span>5</span></p>
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      <!-- Metric 2 -->
-                      <div class="detail-card">
-                        <h3>Metric 2 Analysis</h3>
-                        <div class="card-content">
-                          <div class="metric-summary">
-                            <div class="grid-x grid-padding-x">
-                              <div class="cell medium-6">
-                                <p>
-                                  <strong>Average:</strong> <span>0.62</span>
-                                </p>
-                                <p><strong>Max:</strong> <span>0.88</span></p>
-                              </div>
-                              <div class="cell medium-6">
-                                <p><strong>Min:</strong> <span>0.35</span></p>
-                                <p>
-                                  <strong>Critical:</strong>
-                                  <span>2 nodes</span>
-                                </p>
+                      <!-- Metrics -->
+                      <div class="metrics-container">
+                        <!-- Metric 1 -->
+                        <div class="detail-card">
+                          <h3>Metric 1 Analysis</h3>
+                          <div class="card-content">
+                            <div class="metric-summary">
+                              <div class="grid-x grid-padding-x">
+                                <div class="cell medium-6">
+                                  <p>
+                                    <strong>Average:</strong> <span>0.75</span>
+                                  </p>
+                                  <p><strong>Max:</strong> <span>0.95</span></p>
+                                </div>
+                                <div class="cell medium-6">
+                                  <p><strong>Min:</strong> <span>0.45</span></p>
+                                  <p>
+                                    <strong>Critical:</strong>
+                                    <span>3 nodes</span>
+                                  </p>
+                                </div>
                               </div>
                             </div>
+                            <div class="metric-plot">
+                              <!-- Plot placeholder -->
+                              <div
+                                class="plot-placeholder"
+                                style="
+                                  height: 200px;
+                                  background: #f0f0f0;
+                                  margin: 1rem 0;
+                                "
+                              ></div>
+                            </div>
+                            <div class="critical-elements callout alert">
+                              <strong>Critical Elements:</strong>
+                              <ul>
+                                <li>Node A: 0.95</li>
+                                <li>Node B: 0.92</li>
+                                <li>Node C: 0.90</li>
+                              </ul>
+                            </div>
                           </div>
-                          <div class="metric-plot">
-                            <!-- Plot placeholder -->
-                            <div
-                              class="plot-placeholder"
-                              style="
-                                height: 200px;
-                                background: #f0f0f0;
-                                margin: 1rem 0;
-                              "
-                            ></div>
-                          </div>
-                          <div class="critical-elements callout alert">
-                            <strong>Critical Elements:</strong>
-                            <ul>
-                              <li>Node X: 0.88</li>
-                              <li>Node Y: 0.85</li>
-                            </ul>
+                        </div>
+
+                        <!-- Metric 2 -->
+                        <div class="detail-card">
+                          <h3>Metric 2 Analysis</h3>
+                          <div class="card-content">
+                            <div class="metric-summary">
+                              <div class="grid-x grid-padding-x">
+                                <div class="cell medium-6">
+                                  <p>
+                                    <strong>Average:</strong> <span>0.62</span>
+                                  </p>
+                                  <p><strong>Max:</strong> <span>0.88</span></p>
+                                </div>
+                                <div class="cell medium-6">
+                                  <p><strong>Min:</strong> <span>0.35</span></p>
+                                  <p>
+                                    <strong>Critical:</strong>
+                                    <span>2 nodes</span>
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="metric-plot">
+                              <!-- Plot placeholder -->
+                              <div
+                                class="plot-placeholder"
+                                style="
+                                  height: 200px;
+                                  background: #f0f0f0;
+                                  margin: 1rem 0;
+                                "
+                              ></div>
+                            </div>
+                            <div class="critical-elements callout alert">
+                              <strong>Critical Elements:</strong>
+                              <ul>
+                                <li>Node X: 0.88</li>
+                                <li>Node Y: 0.85</li>
+                              </ul>
+                            </div>
                           </div>
                         </div>
                       </div>
