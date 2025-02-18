@@ -84,6 +84,9 @@ async function initializeVisualizer() {
         const visualizer = new NetworkVisualizer("#network", config);
         const updateIntervals = new Map();
 
+        // Initialize metric legend
+        const metricLegend = new MetricLegendManager();
+
         if (useMockData) {
             // Initialize mock data generator
             const mockGenerator = await loadMockData();
