@@ -14,13 +14,24 @@
     "arrowSize": 5
   },
   "visualization": {
-    "metric": "allocation",
-    "ranges": [
-      { "max": 0, "color": "#006994" },
-      { "max": 45, "color": "#4CAF50" },
-      { "max": 55, "color": "#FFC107" },
-      { "max": 75, "color": "#FF9800" },
-      { "max": 100, "color": "#f44336" }
-    ]
+    "metrics": {
+      "allocation": {
+        "type": "range",
+        "ranges": [
+          { "max": 0, "color": "#006994" },
+          { "max": 45, "color": "#4CAF50" },
+          { "max": 55, "color": "#FFC107" },
+          { "max": 75, "color": "#FF9800" },
+          { "max": 100, "color": "#f44336" }
+        ]
+      },
+      "load": {
+        "type": "continuous",
+        "colorScale": {
+          "min": "#00ff00",
+          "max": "#ff0000"
+        }
+      }
+    }
   }
 }

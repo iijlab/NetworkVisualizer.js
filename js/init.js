@@ -1,19 +1,17 @@
-// init.js
-
-// Cache for loaded network data
-const networkCache = new Map();
+import { NetworkVisualizer } from "./NetworkVisualizer.js";
+import { MockNetworkDataGenerator } from "./network/MockDataGenerator.js";
 
 // Function to detect if we should use mock data
 function shouldUseMockData() {
     // First check for window level configuration
-    if (typeof window.USE_MOCK_DATA !== 'undefined') {
+    if (typeof window.USE_MOCK_DATA !== "undefined") {
         return window.USE_MOCK_DATA;
     }
 
     // Then check for data-mock-data attribute on script tag
-    const scriptTag = document.querySelector('script[data-mock-data]');
+    const scriptTag = document.querySelector("script[data-mock-data]");
     if (scriptTag) {
-        return scriptTag.getAttribute('data-mock-data') === 'true';
+        return scriptTag.getAttribute("data-mock-data") === "true";
     }
 
     return false;
@@ -22,23 +20,31 @@ function shouldUseMockData() {
 async function loadMockData() {
     try {
         // Load root network data first
-        const rootNetworkResponse = await fetch('data/networks/root.json');
+        const rootNetworkResponse = await fetch("data/networks/root.json");
         if (!rootNetworkResponse.ok) {
             throw new Error(`Failed to load root network data: ${rootNetworkResponse.statusText}`);
         }
         const rootNetwork = await rootNetworkResponse.json();
 
-        // Initialize mock data generator with root network
-        const mockGenerator = new MockNetworkDataGenerator(rootNetwork, {
-            updateInterval: 2000,
-            metricName: 'allocation',
-            historyLength: 50,
-            historyInterval: 60000 // 1 minute intervals for demo
-        });
+        // Initialize mock data generators with root network
+        const mockGenerators = {
+            allocation: new MockNetworkDataGenerator(rootNetwork, {
+                updateInterval: 2000,
+                metricName: "allocation",
+                historyLength: 50,
+                historyInterval: 60000 // 1 minute intervals for demo
+            }),
+            load: new MockNetworkDataGenerator(rootNetwork, {
+                updateInterval: 2000,
+                metricName: "load",
+                historyLength: 50,
+                historyInterval: 60000
+            })
+        };
 
-        return mockGenerator;
+        return mockGenerators;
     } catch (error) {
-        console.error('Error loading mock data:', error);
+        console.error("Error loading mock data:", error);
         throw error;
     }
 }
@@ -47,127 +53,78 @@ async function initializeVisualizer() {
     try {
         // Determine if we should use mock data
         const useMockData = shouldUseMockData();
-        console.log(`Initializing with ${useMockData ? 'mock' : 'real'} data`);
+        console.log(`Initializing with ${useMockData ? "mock" : "real"} data`);
 
         // Load configuration
-        let config;
-        if (useMockData) {
-            config = {
-                nodes: {
-                    leaf: { radius: 8, strokeWidth: 2 },
-                    cluster: { radius: 12, strokeWidth: 3 }
-                },
-                links: {
-                    width: 5,
-                    arrowSize: 5
-                },
-                visualization: {
-                    metric: "allocation",
-                    ranges: [
-                        { max: 0, color: "#006994" },
-                        { max: 45, color: "#4CAF50" },
-                        { max: 55, color: "#FFC107" },
-                        { max: 75, color: "#FF9800" },
-                        { max: 100, color: "#f44336" }
-                    ]
-                }
-            };
-        } else {
-            const configResponse = await fetch('data/config.json');
-            if (!configResponse.ok) {
-                throw new Error(`Failed to load config: ${configResponse.statusText}`);
-            }
-            config = await configResponse.json();
+        const configResponse = await fetch("data/config.json");
+        if (!configResponse.ok) {
+            throw new Error(`Failed to load config: ${configResponse.statusText}`);
         }
+        const config = await configResponse.json();
 
-        // Create visualizer instance
+        // Create visualizer instance with mock data if needed
         const visualizer = new NetworkVisualizer("#network", config);
-        const updateIntervals = new Map();
-
-        // Initialize metric legend
-        const metricLegend = new MetricLegendManager();
 
         if (useMockData) {
-            // Initialize mock data generator
-            const mockGenerator = await loadMockData();
-            visualizer.mockDataGenerator = mockGenerator;
+            try {
+                // Initialize mock data generators
+                const mockGenerators = await loadMockData();
 
-            // Override fetch methods for mock data
-            visualizer.fetchNetworkData = async (networkId) => {
-                try {
-                    const response = await fetch(`data/networks/${networkId}.json`);
-                    if (!response.ok) {
-                        throw new Error(`Failed to load network data: ${response.statusText}`);
+                // Set initial mock data generator
+                visualizer.setMockDataGenerator(mockGenerators.allocation);
+
+                // Add method to switch metrics
+                visualizer.switchMetric = (metricName) => {
+                    if (mockGenerators[metricName]) {
+                        config.visualization.metric = metricName;
+                        visualizer.setMockDataGenerator(mockGenerators[metricName]);
+
+                        // Reload current network to apply new metric
+                        const currentNetwork = visualizer.getCurrentNetwork();
+                        if (currentNetwork) {
+                            visualizer.loadNetwork(currentNetwork.metadata.id);
+                        }
                     }
-                    let networkData = await response.json();
+                };
 
-                    // Add network to mock generator if it doesn't exist
-                    if (!mockGenerator.hasNetwork(networkId)) {
-                        mockGenerator.addNetwork(networkData);
-                    }
-
-                    return networkData;
-                } catch (error) {
-                    console.error(`Error loading network ${networkId}:`, error);
-                    throw error;
-                }
-            };
-
-            visualizer.startDynamicUpdates = (networkId) => {
-                // Clear existing interval for this network if it exists
-                if (updateIntervals.has(networkId)) {
-                    clearInterval(updateIntervals.get(networkId));
-                }
-
-                console.log(`Starting dynamic updates for network ${networkId}...`);
-
-                const interval = setInterval(() => {
-                    const updates = mockGenerator.generateUpdate(networkId);
-                    if (updates) {
-                        console.log(`Generated update for network ${networkId}:`, updates);
-                        visualizer.applyNetworkUpdates(updates);
-                    }
-                }, 2000);  // Update every 2 seconds
-
-                updateIntervals.set(networkId, interval);
-            };
-
-            visualizer.stopDynamicUpdates = () => {
-                updateIntervals.forEach((interval) => {
-                    clearInterval(interval);
-                });
-                updateIntervals.clear();
-            };
-        } else {
-            // Real backend implementation
-            visualizer.fetchNetworkData = async (networkId) => {
-                const response = await fetch(`/api/networks/${networkId}`);
-                if (!response.ok) throw new Error('Network fetch failed');
-                return response.json();
-            };
-
-            visualizer.fetchNetworkUpdates = async (networkId) => {
-                const response = await fetch(`/api/networks/${networkId}/updates`);
-                if (!response.ok) throw new Error('Updates fetch failed');
-                return response.json();
-            };
+                console.log("Mock data generators initialized successfully");
+            } catch (error) {
+                console.error("Error initializing mock data:", error);
+                alert("Error initializing mock data. Check the console for details.");
+                return;
+            }
         }
 
         // Initialize with root network
-        await visualizer.loadNetwork('root');
+        await visualizer.loadNetwork("root");
 
         // Handle browser back/forward
-        window.addEventListener('popstate', async () => {
+        window.addEventListener("popstate", async () => {
             const params = new URLSearchParams(window.location.search);
-            const networkId = params.get('network') || 'root';
+            const networkId = params.get("network") || "root";
             await visualizer.loadNetwork(networkId);
         });
 
+        // Add metric switch buttons
+        const metricsContainer = document.createElement("div");
+        metricsContainer.className = "metrics-switch";
+        metricsContainer.style.cssText = "position: absolute; top: 10px; right: 10px; z-index: 100;";
+
+        Object.keys(config.visualization.metrics).forEach(metricName => {
+            const button = document.createElement("button");
+            button.textContent = metricName.charAt(0).toUpperCase() + metricName.slice(1);
+            button.style.cssText = "margin: 0 5px; padding: 5px 10px; cursor: pointer;";
+            button.onclick = () => visualizer.switchMetric(metricName);
+            metricsContainer.appendChild(button);
+        });
+
+        document.querySelector(".visualization-container").appendChild(metricsContainer);
+
     } catch (error) {
-        console.error('Error initializing visualizer:', error);
+        console.error("Error initializing visualizer:", error);
         alert(`Error initializing visualization: ${error.message}`);
     }
 }
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', initializeVisualizer);
+document.addEventListener("DOMContentLoaded", initializeVisualizer);
