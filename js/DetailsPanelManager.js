@@ -4,6 +4,7 @@ class DetailsPanelManager {
         this.panel = panelElement;
         this.config = config;
         this.contentElement = this.panel.querySelector('.details-container');
+        this.plots = new Map(); // Store plot objects
         this.setupResponsiveUpdates();
     }
 
@@ -19,11 +20,7 @@ class DetailsPanelManager {
     }
 
     // Plot Management
-    createMetricsPlot(network, containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        // Prepare data
+    prepareMetricsData(network) {
         const timePoints = network.nodes[0]?.metrics?.history?.map(h => new Date(h.timestamp)) || [];
         const data = [];
 
@@ -53,7 +50,15 @@ class DetailsPanelManager {
             });
         });
 
-        const plot = Plot.plot({
+        return data;
+    }
+
+    createOrUpdateMetricsPlot(network, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const data = this.prepareMetricsData(network);
+        const plotConfig = {
             style: {
                 background: "transparent",
                 color: "currentColor",
@@ -117,33 +122,38 @@ class DetailsPanelManager {
                     range: ["#2196f3", "#4caf50", "#ff9800"]
                 }
             })
-        });
+        };
 
-        container.appendChild(plot);
+        if (this.plots.has(containerId)) {
+            // Update existing plot
+            const existingPlot = this.plots.get(containerId);
+            container.replaceChild(Plot.plot({ ...plotConfig }), existingPlot);
+            this.plots.set(containerId, container.lastChild);
+        } else {
+            // Create new plot
+            const plot = Plot.plot(plotConfig);
+            container.appendChild(plot);
+            this.plots.set(containerId, plot);
+        }
     }
 
     updateActivePlot() {
+        // Update history plots
         const plotContainers = this.panel.querySelectorAll('.history-plot');
         plotContainers.forEach(container => {
             if (container.firstChild) {
-                const existingPlot = container.querySelector('figure');
-                if (existingPlot) {
-                    const width = container.clientWidth - 30;
-                    const metricName = container.dataset.metricName;
-                    const history = JSON.parse(container.dataset.history);
-                    const plot = this.createHistoryPlotElement(history, metricName, width);
-                    if (plot) {
-                        container.replaceChild(plot, existingPlot);
-                    }
-                }
+                const plotId = container.id;
+                const width = container.clientWidth - 30;
+                const metricName = container.dataset.metricName;
+                const history = JSON.parse(container.dataset.history);
+                this.createOrUpdateHistoryPlot(history, metricName, width, plotId);
             }
         });
 
-        // Also update metrics plot if it exists
+        // Update metrics plot if it exists
         const metricsPlot = document.getElementById('metrics-plot');
         if (metricsPlot && this.currentNetwork) {
-            metricsPlot.innerHTML = '';
-            this.createMetricsPlot(this.currentNetwork, 'metrics-plot');
+            this.createOrUpdateMetricsPlot(this.currentNetwork, 'metrics-plot');
         }
     }
 
@@ -152,12 +162,14 @@ class DetailsPanelManager {
             return '<div class="empty-plot">No historical data available</div>';
         }
 
+        const plotId = `history-plot-${Math.random().toString(36).substr(2, 9)}`;
         const plotDiv = document.createElement('div');
         plotDiv.className = 'history-plot';
+        plotDiv.id = plotId;
         plotDiv.dataset.history = JSON.stringify(history);
         plotDiv.dataset.metricName = metricName;
 
-        const plot = this.createHistoryPlotElement(history, metricName);
+        const plot = this.createOrUpdateHistoryPlot(history, metricName, null, plotId);
         if (plot) {
             plotDiv.appendChild(plot);
         }
@@ -165,7 +177,7 @@ class DetailsPanelManager {
         return plotDiv.outerHTML;
     }
 
-    createHistoryPlotElement(history, metricName, width) {
+    createOrUpdateHistoryPlot(history, metricName, width, plotId) {
         const data = history.map(point => ({
             value: point[metricName],
             timestamp: new Date(point.timestamp)
@@ -173,7 +185,7 @@ class DetailsPanelManager {
 
         const plotWidth = width || (this.panel.clientWidth - 30);
 
-        return Plot.plot({
+        const plotConfig = {
             style: {
                 background: "transparent",
                 color: "currentColor",
@@ -223,7 +235,21 @@ class DetailsPanelManager {
                     title: d => `Value: ${d.value.toFixed(2)}%\nTime: ${d.timestamp.toLocaleTimeString()}`
                 })
             ]
-        });
+        };
+
+        if (this.plots.has(plotId)) {
+            // Update existing plot
+            const container = document.getElementById(plotId);
+            const existingPlot = this.plots.get(plotId);
+            container.replaceChild(Plot.plot({ ...plotConfig }), existingPlot);
+            this.plots.set(plotId, container.lastChild);
+            return container.lastChild;
+        } else {
+            // Create new plot
+            const plot = Plot.plot(plotConfig);
+            this.plots.set(plotId, plot);
+            return plot;
+        }
     }
 
     // Panel Content Updates
@@ -298,8 +324,7 @@ class DetailsPanelManager {
 
         // Update the plot
         const plotContainer = document.getElementById('metrics-plot');
-        plotContainer.innerHTML = '';
-        this.createMetricsPlot(network, 'metrics-plot');
+        this.createOrUpdateMetricsPlot(network, 'metrics-plot');
     }
 
     initializeNodeDetailSections() {
@@ -353,10 +378,15 @@ class DetailsPanelManager {
         `;
 
         const historySection = document.getElementById('metric-history');
-        historySection.innerHTML = `
-            <h3>${metricTitle} History</h3>
-            ${this.createHistoryPlot(node.metrics.history, metricName)}
-        `;
+        if (!historySection.querySelector('.history-plot')) {
+            historySection.innerHTML = `
+                <h3>${metricTitle} History</h3>
+                ${this.createHistoryPlot(node.metrics.history, metricName)}
+            `;
+        } else {
+            const plotContainer = historySection.querySelector('.history-plot');
+            this.createOrUpdateHistoryPlot(node.metrics.history, metricName, null, plotContainer.id);
+        }
 
         const summarySection = document.getElementById('cluster-summary');
         summarySection.innerHTML = `
@@ -459,10 +489,15 @@ class DetailsPanelManager {
         `;
 
         const historySection = document.getElementById('link-history');
-        historySection.innerHTML = `
-            <h3>${metricTitle} History</h3>
-            ${this.createHistoryPlot(link.metrics.history, metricName)}
-        `;
+        if (!historySection.querySelector('.history-plot')) {
+            historySection.innerHTML = `
+                <h3>${metricTitle} History</h3>
+                ${this.createHistoryPlot(link.metrics.history, metricName)}
+            `;
+        } else {
+            const plotContainer = historySection.querySelector('.history-plot');
+            this.createOrUpdateHistoryPlot(link.metrics.history, metricName, null, plotContainer.id);
+        }
     }
 
     // Helper Methods
