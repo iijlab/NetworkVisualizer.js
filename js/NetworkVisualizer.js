@@ -13,7 +13,8 @@ const DEFAULT_CONFIG = {
         width: 5,
         arrowSize: 5
     },
-    colors: {
+    visualization: {
+        metric: "allocation",
         ranges: [
             { max: 0, color: "#006994" },
             { max: 45, color: "#4CAF50" },
@@ -31,7 +32,9 @@ class NetworkVisualizer {
         this.selectedElement = null;
         this.currentNetwork = null;
         this.detailsPanel = document.getElementById('details-panel');
-        this.detailsPanel.classList.remove('hidden'); // Always show panel
+        // Use Foundation's visibility classes
+        this.detailsPanel.classList.remove('hide');
+        this.detailsPanel.classList.add('show');
 
         // Initialize resize observer
         this.setupResizeHandling();
@@ -279,7 +282,7 @@ class NetworkVisualizer {
                 </g>
             </svg>
             <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18">
-                <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>
+                <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" fill="currentColor"/>
             </svg>
         `;
 
@@ -390,7 +393,7 @@ class NetworkVisualizer {
                 cluster: { ...defaultConfig.nodes.cluster, ...userConfig.nodes?.cluster }
             },
             links: { ...defaultConfig.links, ...userConfig.links },
-            colors: { ...defaultConfig.colors, ...userConfig.colors }
+            visualization: { ...defaultConfig.visualization, ...userConfig.visualization }
         };
     }
 
@@ -460,8 +463,8 @@ class NetworkVisualizer {
 
     getColorForAllocation(metrics) {
         const allocation = metrics?.current?.allocation ?? 0;
-        const range = this.config.colors.ranges.find(r => allocation <= r.max);
-        return range ? range.color : this.config.colors.ranges[this.config.colors.ranges.length - 1].color;
+        const range = this.config.visualization.ranges.find(r => allocation <= r.max);
+        return range ? range.color : this.config.visualization.ranges[this.config.visualization.ranges.length - 1].color;
     }
 
     calculateNodeRadius(node) {

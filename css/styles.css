@@ -1,733 +1,751 @@
 /* ==========================================================================
    Base styles and layout
    ========================================================================== */
-   body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-  }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
 
-  .container {
-    display: flex;
-    width: 100vw;
-    height: 100vh;
-  }
+.container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
 
-  /* ==========================================================================
+/* ==========================================================================
      Navigation Bar
      ========================================================================== */
-  .navigation-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 40px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #ddd;
-    padding: 0 15px;
-    display: flex;
-    align-items: center;
-  }
+.navigation-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+}
 
-  .network-path {
-    display: flex;
-    align-items: center;
-    max-width: 100%;
-    overflow: hidden;
-  }
+.network-path {
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  overflow: hidden;
+}
 
-  .path-segment {
-    white-space: nowrap;
-    color: #666;
-    cursor: pointer;
-    padding: 0 4px;
-  }
+.path-segment {
+  white-space: nowrap;
+  color: #666;
+  cursor: pointer;
+  padding: 0 4px;
+}
 
-  .path-segment:hover {
-    color: #333;
-  }
+.path-segment:hover {
+  color: #333;
+}
 
-  .path-segment.truncated {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 150px;
-  }
+.path-segment.truncated {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
 
-  .path-separator {
-    color: #999;
-    margin: 0 4px;
-  }
+.path-separator {
+  color: #999;
+  margin: 0 4px;
+}
 
-  /* ==========================================================================
+/* ==========================================================================
      Main Layout
      ========================================================================== */
-  .off-canvas-content {
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
-  }
+.off-canvas-content {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
 
-  .content {
-    padding: 0;
-    width: 100%;
-  }
+.content {
+  padding: 0;
+  width: 100%;
+}
 
-  .main-content-wrapper {
-    height: calc(100vh - 40px); /* Account for title bar */
-    position: relative;
-    padding-top: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* Prevent double scrollbars */
-  }
+.main-content-wrapper {
+  height: calc(100vh - 40px); /* Account for title bar */
+  position: relative;
+  padding-top: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Prevent double scrollbars */
+}
 
-  .grid-container.fluid {
-    padding: 0;
-    height: calc(100% - 40px); /* Account for top nav */
-    overflow: hidden;
-  }
+/* Fix for off-canvas and grid layout */
+.off-canvas-wrapper {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
 
-  .grid-container.fluid .grid-x {
-    height: 100%;
-  }
+/* Adjust the off-canvas positioning */
+.off-canvas.position-left.reveal-for-medium ~ .off-canvas-content {
+  margin-left: 250px; /* Width of the off-canvas menu */
+  width: calc(100% - 250px); /* Adjust width to account for menu */
+}
 
-  /* Network Layer Navigation */
-  .top-nav {
-    flex: 0 0 40px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #ddd;
-    padding: 0.5rem;
-    width: 100%;
-  }
+/* Ensure grid container takes full width */
+.off-canvas-content .grid-container.fluid {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
 
-  .top-nav .grid-container.fluid {
-    height: auto;
-  }
+/* Remove default grid margins */
 
-  .top-nav .cell {
-    padding: 0;
-  }
+.grid-container.fluid {
+  padding: 0;
+  height: calc(100% - 40px); /* Account for top nav */
+  overflow: hidden;
+}
 
-  .network-nav {
-    width: 100%;
-  }
+.grid-container.fluid .grid-x {
+  height: 100%;
+}
 
-  .network-nav .breadcrumbs {
-    margin: 0;
-    border: none;
-    padding: 0;
-    background: transparent;
-  }
+/* Network Layer Navigation */
+.top-nav {
+  flex: 0 0 40px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+  padding: 0.5rem;
+  width: 100%;
+}
 
-  /* ==========================================================================
+.top-nav .grid-container.fluid {
+  height: auto;
+}
+
+.top-nav .cell {
+  padding: 0;
+}
+
+.network-nav {
+  width: 100%;
+}
+
+.network-nav .breadcrumbs {
+  margin: 0;
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+
+/* ==========================================================================
      Network Visualization
      ========================================================================== */
-  /* Network Visualization Section */
-  .visualization-section {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    background: white;
+/* Network Visualization Section */
+.visualization-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.visualization-container {
+  position: relative;
+  flex: 1;
+  padding: 0;
+  background: white;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.visualization-container svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.visualization-container svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.metric-legend {
+  background: white;
+  padding: 1rem;
+  border-top: 1px solid #ddd;
+  display: block;
+  width: 100%;
+}
+
+.legend-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.metric-legend h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  margin-right: 0.5rem;
+  border-radius: 3px;
+}
+
+/* Cluster node specific styles */
+.node.cluster {
+  fill: white;
+  stroke: #333;
+  stroke-width: 2px;
+}
+
+/* Details Section */
+.details-section {
+  height: 100%;
+  overflow-y: auto;
+  padding: 1rem;
+  background: white;
+  border-left: 1px solid #ddd;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-card {
+  flex-shrink: 0;
+}
+
+.metrics-container {
+  overflow-y: auto;
+  height: calc(100% - 140px); /* Account for Network Overview card + padding */
+  padding-right: 5px; /* Space for scrollbar */
+}
+
+.metrics-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.metrics-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.metrics-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.metrics-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+body.dark-mode .metrics-container::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+body.dark-mode .metrics-container::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+body.dark-mode .metrics-container::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+.detail-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.detail-card h3 {
+  padding: 1rem;
+  margin: 0;
+  border-bottom: 1px solid #ddd;
+  font-size: 1.1rem;
+}
+
+.card-content {
+  padding: 1rem;
+}
+
+.metric-summary {
+  margin-bottom: 1rem;
+}
+
+.metric-plot {
+  margin: 1rem 0;
+}
+
+.critical-elements {
+  margin: 1rem 0 0 0;
+}
+
+.critical-elements ul {
+  margin: 0.5rem 0 0 0;
+  list-style-type: none;
+}
+
+.critical-elements li {
+  padding: 0.25rem 0;
+}
+
+#network {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.node {
+  cursor: pointer;
+}
+
+.node-label {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.link-half {
+  cursor: pointer;
+  transition: stroke-width 0.2s;
+}
+
+/* ==========================================================================
+     Details Panel
+     ========================================================================== */
+.details-panel {
+  position: relative;
+  background: white;
+  border-left: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: none;
+}
+
+.details-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.detail-section {
+  margin-bottom: 20px;
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #333;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.detail-section table td {
+  padding: 8px 0;
+  line-height: 1.4;
+}
+
+.detail-section table td:first-child {
+  color: #666;
+  width: 40%;
+  padding-right: 10px;
+}
+
+.detail-section table td:last-child {
+  font-weight: 500;
+}
+
+/* Resize Handle */
+.resize-handle {
+  position: absolute;
+  left: -5px;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+.details-panel.dragging {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ==========================================================================
+     Charts and Metrics
+     ========================================================================== */
+.history-plot {
+  width: 100%;
+  height: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+.history-plot svg {
+  width: 100%;
+  height: auto;
+  min-height: 200px;
+}
+
+.history-plot > div {
+  width: 100%;
+  height: auto;
+}
+
+/* ==========================================================================
+     Legend
+     ========================================================================== */
+.details-legend {
+  border-top: 1px solid #ddd;
+  padding: 15px;
+  background: white;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin: 5px 0;
+}
+
+.legend-color {
+  width: 30px;
+  height: 10px;
+  margin-right: 10px;
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+     Context Menu
+     ========================================================================== */
+.context-menu {
+  position: fixed;
+  display: none;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  color: #333;
+}
+
+.context-menu-item {
+  padding: 8px 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+
+.context-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+/* ==========================================================================
+     Theme Toggle
+     ========================================================================== */
+.theme-toggle {
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  padding: 8px;
+  margin-right: 16px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.theme-toggle .moon-icon {
+  display: none;
+}
+
+/* ==========================================================================
+     Dark Mode
+     ========================================================================== */
+body.dark-mode {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+body.dark-mode .navigation-bar,
+body.dark-mode .top-nav {
+  background: #2d2d2d;
+  border-bottom-color: #404040;
+}
+
+body.dark-mode .network-nav .breadcrumbs {
+  background: transparent;
+}
+
+body.dark-mode .network-nav .breadcrumbs li a {
+  color: #bbb;
+}
+
+body.dark-mode .network-nav .breadcrumbs li.current {
+  color: #fff;
+}
+
+body.dark-mode .theme-toggle {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .theme-toggle .sun-icon {
+  display: none;
+}
+
+body.dark-mode .theme-toggle .moon-icon {
+  display: block;
+}
+
+body.dark-mode .path-segment {
+  color: #bbb;
+}
+
+body.dark-mode .path-segment:hover {
+  color: #fff;
+}
+
+body.dark-mode .path-separator {
+  color: #666;
+}
+
+body.dark-mode .visualization-container {
+  background: #1a1a1a;
+}
+
+/* Override cluster node fill in dark mode while preserving stroke */
+body.dark-mode .node circle[fill="white"] {
+  fill: #1a1a1a !important;
+}
+
+/* Plot tooltip styles for dark mode */
+body.dark-mode .plot-tooltip {
+  background: #2d2d2d !important;
+  color: #fff !important;
+  border: 1px solid #404040 !important;
+  padding: 8px !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  white-space: pre-line !important;
+}
+
+body.dark-mode .details-section,
+body.dark-mode .details-legend,
+body.dark-mode .metric-legend,
+body.dark-mode .detail-card {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+body.dark-mode .detail-card h3 {
+  color: #fff;
+  border-bottom-color: #404040;
+}
+
+body.dark-mode .metric-legend h4 {
+  color: #fff;
+}
+
+body.dark-mode .legend-label {
+  color: #bbb;
+}
+
+body.dark-mode .detail-section {
+  background: #2d2d2d;
+  margin-bottom: 8px;
+}
+
+body.dark-mode .detail-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Alternating backgrounds for table rows in dark mode */
+body.dark-mode .detail-section table tr td {
+  background: #1a1a1a;
+  padding: 12px 8px;
+}
+
+body.dark-mode .detail-section table tr:nth-child(even) td {
+  background: #262626;
+}
+
+body.dark-mode .detail-section table td:first-child {
+  padding-left: 16px;
+}
+
+body.dark-mode .detail-section table td:last-child {
+  padding-right: 16px;
+}
+
+body.dark-mode .details-panel {
+  border-left-color: #404040;
+}
+
+body.dark-mode .details-legend {
+  border-top-color: #404040;
+}
+
+body.dark-mode .detail-section h3 {
+  color: #fff;
+  border-bottom-color: #404040;
+}
+
+body.dark-mode .detail-section table td:first-child {
+  color: #bbb;
+}
+
+body.dark-mode .history-plot {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+body.dark-mode .history-plot svg {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+body.dark-mode .history-plot svg text {
+  fill: #fff;
+}
+
+body.dark-mode .node-label {
+  fill: #fff;
+  color: #fff;
+}
+
+body.dark-mode .link-selection,
+body.dark-mode circle[class*="selection"] {
+  stroke: rgba(255, 255, 255, 0.8) !important;
+}
+
+body.dark-mode .context-menu {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .context-menu-item:hover {
+  background-color: #404040;
+}
+
+body.dark-mode .context-menu-item[style*="color: #f44336"] {
+  color: #ff6b6b !important;
+}
+
+/* ==========================================================================
+     Media Queries
+     ========================================================================== */
+/* Responsive Behavior */
+@media screen and (max-width: 39.9375em) {
+  .main-content-wrapper {
+    height: auto;
+    overflow: auto;
   }
 
-  .cell {
-    display: flex;
-    flex-direction: column;
+  .visualization-section {
+    height: auto;
+    min-height: 60vh;
   }
 
   .visualization-container {
-    position: relative;
-    flex: 1;
-    padding: 0;
-    background: white;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    height: 50vh;
   }
 
-  .visualization-container svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-  }
-
-  .visualization-container svg {
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-
-  .metric-legend {
-    background: white;
-    padding: 1rem;
+  .details-section {
+    height: auto;
+    border-left: none;
     border-top: 1px solid #ddd;
-    display: block;
-    width: 100%;
   }
+}
 
-  .legend-content {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .metric-legend h4 {
-    margin: 0 0 1rem 0;
-    font-size: 1rem;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-
-  .legend-color {
-    width: 20px;
-    height: 20px;
-    margin-right: 0.5rem;
-    border-radius: 3px;
-  }
-
-  /* Cluster node specific styles */
-  .node.cluster {
-    fill: white;
-    stroke: #333;
-    stroke-width: 2px;
-  }
-
-  /* Details Section */
+@media screen and (min-width: 40em) {
   .details-section {
     height: 100%;
     overflow-y: auto;
-    padding: 1rem;
-    background: white;
-    border-left: 1px solid #ddd;
-    position: relative;
-    display: flex;
-    flex-direction: column;
   }
 
-  .detail-card {
-    flex-shrink: 0;
-  }
-
-  .metrics-container {
-    overflow-y: auto;
-    height: calc(100% - 140px); /* Account for Network Overview card + padding */
-    padding-right: 5px; /* Space for scrollbar */
-  }
-
-  .metrics-container::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .metrics-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-  }
-
-  .metrics-container::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-  }
-
-  .metrics-container::-webkit-scrollbar-thumb:hover {
-    background: #555;
-  }
-
-  body.dark-mode .metrics-container::-webkit-scrollbar-track {
-    background: #2d2d2d;
-  }
-
-  body.dark-mode .metrics-container::-webkit-scrollbar-thumb {
-    background: #555;
-  }
-
-  body.dark-mode .metrics-container::-webkit-scrollbar-thumb:hover {
-    background: #666;
-  }
-
-  .detail-card {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-  }
-
-  .detail-card h3 {
-    padding: 1rem;
-    margin: 0;
-    border-bottom: 1px solid #ddd;
-    font-size: 1.1rem;
-  }
-
-  .card-content {
-    padding: 1rem;
-  }
-
-  .metric-summary {
-    margin-bottom: 1rem;
-  }
-
-  .metric-plot {
-    margin: 1rem 0;
-  }
-
-  .critical-elements {
-    margin: 1rem 0 0 0;
-  }
-
-  .critical-elements ul {
-    margin: 0.5rem 0 0 0;
-    list-style-type: none;
-  }
-
-  .critical-elements li {
-    padding: 0.25rem 0;
-  }
-
-  #network {
-    width: 100%;
+  .visualization-section {
     height: 100%;
-    display: block;
   }
+}
 
-  .node {
-    cursor: pointer;
+@media screen and (min-width: 40em) {
+  .main-content-wrapper {
+    padding-top: 0;
   }
+}
 
-  .node-label {
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-    pointer-events: none;
-  }
-
-  .link-half {
-    cursor: pointer;
-    transition: stroke-width 0.2s;
-  }
-
-  /* ==========================================================================
-     Details Panel
-     ========================================================================== */
-  .details-panel {
-    position: relative;
-    background: white;
-    border-left: 1px solid #ddd;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    transition: none;
-  }
-
-  .details-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px;
-  }
-
-  .detail-section {
-    margin-bottom: 20px;
-    background: white;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .detail-section:last-child {
-    margin-bottom: 0;
-  }
-
-  .detail-section h3 {
-    margin: 0 0 10px 0;
-    font-size: 16px;
-    color: #333;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #eee;
-  }
-
-  .detail-section table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .detail-section table td {
-    padding: 8px 0;
-    line-height: 1.4;
-  }
-
-  .detail-section table td:first-child {
-    color: #666;
-    width: 40%;
-    padding-right: 10px;
-  }
-
-  .detail-section table td:last-child {
-    font-weight: 500;
-  }
-
-  /* Resize Handle */
-  .resize-handle {
-    position: absolute;
-    left: -5px;
-    top: 0;
-    bottom: 0;
-    width: 10px;
-    cursor: col-resize;
-    z-index: 10;
-  }
-
-  .details-panel.dragging {
-    user-select: none;
-    -webkit-user-select: none;
-  }
-
-  /* ==========================================================================
-     Charts and Metrics
-     ========================================================================== */
-  .history-plot {
-    width: 100%;
-    height: auto;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 15px;
-    margin: 10px 0;
-    overflow: hidden;
-  }
-
-  .history-plot svg {
-    width: 100%;
-    height: auto;
-    min-height: 200px;
-  }
-
-  .history-plot > div {
-    width: 100%;
-    height: auto;
-  }
-
-  /* ==========================================================================
-     Legend
-     ========================================================================== */
-  .details-legend {
-    border-top: 1px solid #ddd;
-    padding: 15px;
-    background: white;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    margin: 5px 0;
-  }
-
-  .legend-color {
-    width: 30px;
-    height: 10px;
-    margin-right: 10px;
-    border-radius: 2px;
-  }
-
-  /* ==========================================================================
-     Context Menu
-     ========================================================================== */
-  .context-menu {
-    position: fixed;
-    display: none;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 5px 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    z-index: 1000;
-    color: #333;
-  }
-
-  .context-menu-item {
-    padding: 8px 20px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background-color 0.2s;
-  }
-
-  .context-menu-item:hover {
-    background-color: #f5f5f5;
-  }
-
-  /* ==========================================================================
-     Theme Toggle
-     ========================================================================== */
-  .theme-toggle {
-    background: none;
-    border: 1px solid rgba(0,0,0,0.1);
-    cursor: pointer;
-    padding: 8px;
-    margin-right: 16px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .theme-toggle:hover {
-    background: rgba(0,0,0,0.05);
-  }
-
-  .theme-toggle .moon-icon {
-    display: none;
-  }
-
-  /* ==========================================================================
-     Dark Mode
-     ========================================================================== */
-  body.dark-mode {
-    background: #1a1a1a;
-    color: #fff;
-  }
-
-  body.dark-mode .navigation-bar,
-  body.dark-mode .top-nav {
-    background: #2d2d2d;
-    border-bottom-color: #404040;
-  }
-
-  body.dark-mode .network-nav .breadcrumbs {
-    background: transparent;
-  }
-
-  body.dark-mode .network-nav .breadcrumbs li a {
-    color: #bbb;
-  }
-
-  body.dark-mode .network-nav .breadcrumbs li.current {
-    color: #fff;
-  }
-
-  body.dark-mode .theme-toggle {
-    border-color: rgba(255,255,255,0.2);
-  }
-
-  body.dark-mode .theme-toggle:hover {
-    background: rgba(255,255,255,0.1);
-  }
-
-  body.dark-mode .theme-toggle .sun-icon {
-    display: none;
-  }
-
-  body.dark-mode .theme-toggle .moon-icon {
-    display: block;
-  }
-
-  body.dark-mode .path-segment {
-    color: #bbb;
-  }
-
-  body.dark-mode .path-segment:hover {
-    color: #fff;
-  }
-
-  body.dark-mode .path-separator {
-    color: #666;
-  }
-
-  body.dark-mode .visualization-container {
-    background: #1a1a1a;
-  }
-
-  /* Override cluster node fill in dark mode while preserving stroke */
-  body.dark-mode .node circle[fill="white"] {
-    fill: #1a1a1a !important;
-  }
-
-  /* Plot tooltip styles for dark mode */
-  body.dark-mode .plot-tooltip {
-    background: #2d2d2d !important;
-    color: #fff !important;
-    border: 1px solid #404040 !important;
-    padding: 8px !important;
-    border-radius: 4px !important;
-    font-size: 12px !important;
-    white-space: pre-line !important;
-  }
-
-  body.dark-mode .details-section,
-  body.dark-mode .details-legend,
-  body.dark-mode .metric-legend,
-  body.dark-mode .detail-card {
-    background: #2d2d2d;
-    border-color: #404040;
-  }
-
-  body.dark-mode .detail-card h3 {
-    color: #fff;
-    border-bottom-color: #404040;
-  }
-
-  body.dark-mode .metric-legend h4 {
-    color: #fff;
-  }
-
-  body.dark-mode .legend-label {
-    color: #bbb;
-  }
-
-  body.dark-mode .detail-section {
-    background: #2d2d2d;
-    margin-bottom: 8px;
-  }
-
-  body.dark-mode .detail-section:last-child {
-    margin-bottom: 0;
-  }
-
-  /* Alternating backgrounds for table rows in dark mode */
-  body.dark-mode .detail-section table tr td {
-    background: #1a1a1a;
-    padding: 12px 8px;
-  }
-
-  body.dark-mode .detail-section table tr:nth-child(even) td {
-    background: #262626;
-  }
-
-  body.dark-mode .detail-section table td:first-child {
-    padding-left: 16px;
-  }
-
-  body.dark-mode .detail-section table td:last-child {
-    padding-right: 16px;
-  }
-
-  body.dark-mode .details-panel {
-    border-left-color: #404040;
-  }
-
-  body.dark-mode .details-legend {
-    border-top-color: #404040;
-  }
-
-  body.dark-mode .detail-section h3 {
-    color: #fff;
-    border-bottom-color: #404040;
-  }
-
-  body.dark-mode .detail-section table td:first-child {
-    color: #bbb;
-  }
-
-  body.dark-mode .history-plot {
-    background: #2d2d2d;
-    border-color: #404040;
-  }
-
-  body.dark-mode .history-plot svg {
-    filter: invert(1) hue-rotate(180deg);
-  }
-
-  body.dark-mode .history-plot svg text {
-    fill: #fff;
-  }
-
-  body.dark-mode .node-label {
-    fill: #fff;
-    color: #fff;
-  }
-
-  body.dark-mode .link-selection,
-  body.dark-mode circle[class*="selection"] {
-     stroke: rgba(255, 255, 255, 0.8) !important;
-  }
-
-  body.dark-mode .context-menu {
-    background: #2d2d2d;
-    border-color: #404040;
-    color: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-  }
-
-  body.dark-mode .context-menu-item:hover {
-    background-color: #404040;
-  }
-
-  body.dark-mode .context-menu-item[style*="color: #f44336"] {
-    color: #ff6b6b !important;
-  }
-
-  /* ==========================================================================
-     Media Queries
-     ========================================================================== */
-  /* Responsive Behavior */
-  @media screen and (max-width: 39.9375em) {
-    .main-content-wrapper {
-      height: auto;
-      overflow: auto;
-    }
-
-    .visualization-section {
-      height: auto;
-      min-height: 60vh;
-    }
-
-    .visualization-container {
-      height: 50vh;
-    }
-
-    .details-section {
-      height: auto;
-      border-left: none;
-      border-top: 1px solid #ddd;
-    }
-  }
-
-  @media screen and (min-width: 40em) {
-    .details-section {
-      height: 100%;
-      overflow-y: auto;
-    }
-
-    .visualization-section {
-      height: 100%;
-    }
-  }
-
-  @media screen and (min-width: 40em) {
-    .off-canvas.position-left ~ .off-canvas-content {
-      margin-left: 250px; /* Match Foundation's off-canvas width */
-    }
-
-    .main-content-wrapper {
-      padding-top: 0;
-    }
-  }
-
-  /* ==========================================================================
+/* ==========================================================================
      Print Styles
      ========================================================================== */
-  @media print {
-    .details-panel {
-      width: 100%;
-      border: none;
-    }
-
-    .chart-container {
-      break-inside: avoid;
-    }
-
-    .details-legend {
-      position: static;
-      margin: 20px;
-      break-inside: avoid;
-    }
-
-    .history-plot {
-      break-inside: avoid;
-      border: 1px solid #999;
-    }
+@media print {
+  .details-panel {
+    width: 100%;
+    border: none;
   }
+
+  .chart-container {
+    break-inside: avoid;
+  }
+
+  .details-legend {
+    position: static;
+    margin: 20px;
+    break-inside: avoid;
+  }
+
+  .history-plot {
+    break-inside: avoid;
+    border: 1px solid #999;
+  }
+}
