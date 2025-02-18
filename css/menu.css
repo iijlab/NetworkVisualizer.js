@@ -68,6 +68,8 @@
 @media screen and (max-width: 39.9375em) {
   .off-canvas-content {
     padding-top: 2.5rem; /* Height of the mobile title bar */
+    margin-left: 0 !important; /* Force remove margin on small screens */
+    width: 100% !important;
   }
 }
 
@@ -84,6 +86,10 @@
 @media screen and (min-width: 40em) {
   .off-canvas.position-left.reveal-for-medium {
     transform: none !important;
+  }
+  .off-canvas.position-left.reveal-for-medium ~ .off-canvas-content {
+    margin-left: 250px;
+    width: calc(100% - 250px);
   }
 }
 
