@@ -19,7 +19,7 @@ body {
 
 .grid-y.medium-grid-frame {
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
 }
 
 /* Grid layout fixes */
@@ -28,15 +28,10 @@ body {
   margin: 0;
 }
 
-.grid-x.grid-margin-x {
-  width: calc(100% + 1.25rem);
-  margin: 0 -0.625rem;
-}
-
 /* Cell sizing */
 .visualization-cell,
 .details-cell {
-  padding: 0 0.625rem;
+  padding: 0;
 }
 
 /* Adjust content when off-canvas is revealed */
@@ -181,8 +176,7 @@ body {
      ========================================================================== */
 .off-canvas-content {
   width: 100%;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
 }
 
 .content {
@@ -196,7 +190,6 @@ body {
   padding-top: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Prevent double scrollbars */
 }
 
 /* Fix for off-canvas and grid layout */
@@ -361,6 +354,13 @@ body {
   overflow-y: auto;
   height: calc(100% - 140px); /* Account for Network Overview card + padding */
   padding-right: 5px; /* Space for scrollbar */
+}
+
+@media screen and (max-width: 63.9375em) {
+  .metrics-container {
+    height: auto;
+    max-height: none;
+  }
 }
 
 .metrics-container::-webkit-scrollbar {
@@ -781,19 +781,38 @@ body.dark-mode .context-menu-item[style*="color: #f44336"] {
      Media Queries
      ========================================================================== */
 /* Responsive Behavior */
-@media screen and (max-width: 39.9375em) {
+@media screen and (max-width: 63.9375em) {
+  .off-canvas-wrapper {
+    height: auto;
+    overflow: visible;
+  }
+
+  .off-canvas-content {
+    height: auto;
+    overflow: visible;
+  }
+
   .main-content-wrapper {
     height: auto;
-    overflow: auto;
+  }
+
+  .grid-container.fluid {
+    height: auto;
+    overflow: visible;
+  }
+
+  .grid-container.fluid .grid-x {
+    height: auto;
+    flex-direction: column;
   }
 
   .visualization-section {
-    height: auto;
-    min-height: 60vh;
+    height: 100vh;
+    position: relative;
   }
 
   .visualization-container {
-    height: 50vh;
+    height: 100%;
   }
 
   .details-section {
@@ -801,9 +820,14 @@ body.dark-mode .context-menu-item[style*="color: #f44336"] {
     border-left: none;
     border-top: 1px solid #ddd;
   }
+
+  .grid-y.medium-grid-frame {
+    height: auto;
+    min-height: 100vh;
+  }
 }
 
-@media screen and (min-width: 40em) {
+@media screen and (min-width: 64em) {
   .details-section {
     height: 100%;
     overflow-y: auto;
