@@ -227,62 +227,96 @@ class DetailsPanelManager {
     }
 
     // Panel Content Updates
+    initializeDetailSections() {
+        // Create all sections with unique IDs
+        this.contentElement.innerHTML = `
+            <div id="network-overview" class="detail-section"></div>
+            <div id="metric-summary" class="detail-section"></div>
+            <div id="critical-metrics" class="detail-section"></div>
+            <div id="metric-distribution" class="detail-section">
+                <div id="metrics-plot" style="width: 100%; margin-top: 20px;"></div>
+            </div>
+        `;
+    }
+
     updateNetworkOverview(network) {
         this.currentNetwork = network;
         const stats = NetworkStats.calculate(network);
         const metricName = this.config.visualization.metric;
         const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
 
-        this.contentElement.innerHTML = `
-            <div class="detail-section">
-                <h3>Network Overview</h3>
-                <table>
-                    <tr>
-                        <td>Network ID:</td>
-                        <td>${network.metadata.id}</td>
-                    </tr>
-                    <tr>
-                        <td>Total Nodes:</td>
-                        <td>${stats.totalNodes} (${stats.clusterNodes} clusters, ${stats.leafNodes} leaves)</td>
-                    </tr>
-                    <tr>
-                        <td>Total Links:</td>
-                        <td>${stats.totalLinks}</td>
-                    </tr>
-                </table>
-            </div>
-            <div class="detail-section">
-                <h3>${metricTitle} Summary</h3>
-                <table>
-                    <tr>
-                        <td>Avg Node ${metricTitle}:</td>
-                        <td>${stats.avgMetric.nodes.toFixed(2)}%</td>
-                    </tr>
-                    <tr>
-                        <td>Max Node ${metricTitle}:</td>
-                        <td>${stats.maxMetric.nodes.toFixed(2)}%</td>
-                    </tr>
-                    <tr>
-                        <td>Avg Link ${metricTitle}:</td>
-                        <td>${stats.avgMetric.links.toFixed(2)}%</td>
-                    </tr>
-                    <tr>
-                        <td>Max Link ${metricTitle}:</td>
-                        <td>${stats.maxMetric.links.toFixed(2)}%</td>
-                    </tr>
-                </table>
-            </div>
-            ${this.renderCriticalMetrics(stats)}
-            <div class="detail-section">
-                <h3>${metricTitle} Distribution</h3>
-                <div id="metrics-plot" style="width: 100%; margin-top: 20px;"></div>
-            </div>
+        // Initialize sections if they don't exist
+        if (!document.getElementById('network-overview')) {
+            this.initializeDetailSections();
+        }
+
+        // Update each section individually
+        const overviewSection = document.getElementById('network-overview');
+        overviewSection.innerHTML = `
+            <h3>Network Overview</h3>
+            <table>
+                <tr>
+                    <td>Network ID:</td>
+                    <td>${network.metadata.id}</td>
+                </tr>
+                <tr>
+                    <td>Total Nodes:</td>
+                    <td>${stats.totalNodes} (${stats.clusterNodes} clusters, ${stats.leafNodes} leaves)</td>
+                </tr>
+                <tr>
+                    <td>Total Links:</td>
+                    <td>${stats.totalLinks}</td>
+                </tr>
+            </table>
         `;
 
+        const summarySection = document.getElementById('metric-summary');
+        summarySection.innerHTML = `
+            <h3>${metricTitle} Summary</h3>
+            <table>
+                <tr>
+                    <td>Avg Node ${metricTitle}:</td>
+                    <td>${stats.avgMetric.nodes.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Max Node ${metricTitle}:</td>
+                    <td>${stats.maxMetric.nodes.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Avg Link ${metricTitle}:</td>
+                    <td>${stats.avgMetric.links.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Max Link ${metricTitle}:</td>
+                    <td>${stats.maxMetric.links.toFixed(2)}%</td>
+                </tr>
+            </table>
+        `;
+
+        const criticalSection = document.getElementById('critical-metrics');
+        criticalSection.innerHTML = this.renderCriticalMetrics(stats);
+
+        // Update the plot
+        const plotContainer = document.getElementById('metrics-plot');
+        plotContainer.innerHTML = '';
         this.createMetricsPlot(network, 'metrics-plot');
     }
 
+    initializeNodeDetailSections() {
+        this.contentElement.innerHTML = `
+            <div id="node-info" class="detail-section"></div>
+            <div id="metric-history" class="detail-section"></div>
+            <div id="cluster-summary" class="detail-section"></div>
+            <div id="cluster-critical-metrics" class="detail-section"></div>
+        `;
+    }
+
     updateNodeDetails(node, clusterNetwork = null) {
+        // Initialize sections if they don't exist
+        if (!document.getElementById('node-info')) {
+            this.initializeNodeDetailSections();
+        }
+
         if (node.type === 'cluster' && clusterNetwork) {
             this.updateClusterDetails(node, clusterNetwork);
         } else {
@@ -295,116 +329,139 @@ class DetailsPanelManager {
         const metricName = this.config.visualization.metric;
         const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
 
-        this.contentElement.innerHTML = `
-            <div class="detail-section">
-                <h3>Cluster Information</h3>
-                <table>
-                    <tr>
-                        <td>Cluster ID:</td>
-                        <td>${node.id}</td>
-                    </tr>
-                    <tr>
-                        <td>Current ${metricTitle}:</td>
-                        <td>${node.metrics.current[metricName].toFixed(2)}%</td>
-                    </tr>
-                    <tr>
-                        <td>Contained Nodes:</td>
-                        <td>${stats.totalNodes} (${stats.clusterNodes} clusters, ${stats.leafNodes} leaves)</td>
-                    </tr>
-                    <tr>
-                        <td>Internal Links:</td>
-                        <td>${stats.totalLinks}</td>
-                    </tr>
-                </table>
-            </div>
-            <div class="detail-section">
-                <h3>${metricTitle} History</h3>
-                ${this.createHistoryPlot(node.metrics.history, metricName)}
-            </div>
-            <div class="detail-section">
-                <h3>Cluster ${metricTitle} Summary</h3>
-                <table>
-                    <tr>
-                        <td>Avg Node ${metricTitle}:</td>
-                        <td>${stats.avgMetric.nodes.toFixed(2)}%</td>
-                    </tr>
-                    <tr>
-                        <td>Max Node ${metricTitle}:</td>
-                        <td>${stats.maxMetric.nodes.toFixed(2)}%</td>
-                    </tr>
-                    <tr>
-                        <td>Avg Link ${metricTitle}:</td>
-                        <td>${stats.avgMetric.links.toFixed(2)}%</td>
-                    </tr>
-                    <tr>
-                        <td>Max Link ${metricTitle}:</td>
-                        <td>${stats.maxMetric.links.toFixed(2)}%</td>
-                    </tr>
-                </table>
-            </div>
-            ${this.renderCriticalMetrics(stats)}
+        const nodeInfo = document.getElementById('node-info');
+        nodeInfo.innerHTML = `
+            <h3>Cluster Information</h3>
+            <table>
+                <tr>
+                    <td>Cluster ID:</td>
+                    <td>${node.id}</td>
+                </tr>
+                <tr>
+                    <td>Current ${metricTitle}:</td>
+                    <td>${node.metrics.current[metricName].toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Contained Nodes:</td>
+                    <td>${stats.totalNodes} (${stats.clusterNodes} clusters, ${stats.leafNodes} leaves)</td>
+                </tr>
+                <tr>
+                    <td>Internal Links:</td>
+                    <td>${stats.totalLinks}</td>
+                </tr>
+            </table>
         `;
+
+        const historySection = document.getElementById('metric-history');
+        historySection.innerHTML = `
+            <h3>${metricTitle} History</h3>
+            ${this.createHistoryPlot(node.metrics.history, metricName)}
+        `;
+
+        const summarySection = document.getElementById('cluster-summary');
+        summarySection.innerHTML = `
+            <h3>Cluster ${metricTitle} Summary</h3>
+            <table>
+                <tr>
+                    <td>Avg Node ${metricTitle}:</td>
+                    <td>${stats.avgMetric.nodes.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Max Node ${metricTitle}:</td>
+                    <td>${stats.maxMetric.nodes.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Avg Link ${metricTitle}:</td>
+                    <td>${stats.avgMetric.links.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Max Link ${metricTitle}:</td>
+                    <td>${stats.maxMetric.links.toFixed(2)}%</td>
+                </tr>
+            </table>
+        `;
+
+        const criticalSection = document.getElementById('cluster-critical-metrics');
+        criticalSection.innerHTML = this.renderCriticalMetrics(stats);
     }
 
     updateLeafNodeDetails(node) {
         const metricName = this.config.visualization.metric;
         const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
 
+        const nodeInfo = document.getElementById('node-info');
+        nodeInfo.innerHTML = `
+            <h3>Node Information</h3>
+            <table>
+                <tr>
+                    <td>ID:</td>
+                    <td>${node.id}</td>
+                </tr>
+                <tr>
+                    <td>Type:</td>
+                    <td>${node.type}</td>
+                </tr>
+                <tr>
+                    <td>${metricTitle}:</td>
+                    <td>${node.metrics.current[metricName].toFixed(2)}%</td>
+                </tr>
+            </table>
+        `;
+
+        const historySection = document.getElementById('metric-history');
+        historySection.innerHTML = `
+            <h3>${metricTitle} History</h3>
+            ${this.createHistoryPlot(node.metrics.history, metricName)}
+        `;
+
+        // Clear unused sections
+        document.getElementById('cluster-summary').innerHTML = '';
+        document.getElementById('cluster-critical-metrics').innerHTML = '';
+    }
+
+    initializeLinkDetailSections() {
         this.contentElement.innerHTML = `
-            <div class="detail-section">
-                <h3>Node Information</h3>
-                <table>
-                    <tr>
-                        <td>ID:</td>
-                        <td>${node.id}</td>
-                    </tr>
-                    <tr>
-                        <td>Type:</td>
-                        <td>${node.type}</td>
-                    </tr>
-                    <tr>
-                        <td>${metricTitle}:</td>
-                        <td>${node.metrics.current[metricName].toFixed(2)}%</td>
-                    </tr>
-                </table>
-            </div>
-            <div class="detail-section">
-                <h3>${metricTitle} History</h3>
-                ${this.createHistoryPlot(node.metrics.history, metricName)}
-            </div>
+            <div id="link-info" class="detail-section"></div>
+            <div id="link-history" class="detail-section"></div>
         `;
     }
 
     updateLinkDetails(link) {
+        // Initialize sections if they don't exist
+        if (!document.getElementById('link-info')) {
+            this.initializeLinkDetailSections();
+        }
+
         const metricName = this.config.visualization.metric;
         const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
 
-        this.contentElement.innerHTML = `
-            <div class="detail-section">
-                <h3>Link Information</h3>
-                <table>
-                    <tr>
-                        <td>Source:</td>
-                        <td>${link.source}</td>
-                    </tr>
-                    <tr>
-                        <td>Target:</td>
-                        <td>${link.target}</td>
-                    </tr>
-                    <tr>
-                        <td>${metricTitle}:</td>
-                        <td>${link.metrics.current[metricName].toFixed(2)}%</td>
-                    </tr>
-                    <tr>
-                        <td>Capacity:</td>
-                        <td>${link.metrics.current.capacity}</td>
-                    </tr>
-                </table>
-            </div>
-            <div class="detail-section">
-                <h3>${metricTitle} History</h3>
-                ${this.createHistoryPlot(link.metrics.history, metricName)}
-            </div>
+        const linkInfo = document.getElementById('link-info');
+        linkInfo.innerHTML = `
+            <h3>Link Information</h3>
+            <table>
+                <tr>
+                    <td>Source:</td>
+                    <td>${link.source}</td>
+                </tr>
+                <tr>
+                    <td>Target:</td>
+                    <td>${link.target}</td>
+                </tr>
+                <tr>
+                    <td>${metricTitle}:</td>
+                    <td>${link.metrics.current[metricName].toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Capacity:</td>
+                    <td>${link.metrics.current.capacity}</td>
+                </tr>
+            </table>
+        `;
+
+        const historySection = document.getElementById('link-history');
+        historySection.innerHTML = `
+            <h3>${metricTitle} History</h3>
+            ${this.createHistoryPlot(link.metrics.history, metricName)}
         `;
     }
 
