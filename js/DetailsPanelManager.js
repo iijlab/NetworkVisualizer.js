@@ -4,48 +4,7 @@ class DetailsPanelManager {
         this.panel = panelElement;
         this.config = config;
         this.contentElement = this.panel.querySelector('.details-content');
-        this.setupLegend();
         this.setupResponsiveUpdates();
-    }
-
-    setupLegend() {
-        if (this.panel.querySelector('.details-legend')) {
-            return;
-        }
-
-        const legendDiv = document.createElement('div');
-        legendDiv.className = 'details-legend';
-
-        const metricName = this.config.visualization.metric;
-        const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
-
-        legendDiv.innerHTML = `
-            <h3 style="margin-bottom: 10px; font-weight: 600;">${metricTitle}</h3>
-            <div class="legend-items">
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #006994"></div>
-                    <span>0%</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #4caf50"></div>
-                    <span>0-45%</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #ffc107"></div>
-                    <span>45-55%</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #ff9800"></div>
-                    <span>55-75%</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #f44336"></div>
-                    <span>>75%</span>
-                </div>
-            </div>
-        `;
-
-        this.contentElement.insertAdjacentElement('afterend', legendDiv);
     }
 
     setupResponsiveUpdates() {

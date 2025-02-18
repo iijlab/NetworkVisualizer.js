@@ -555,28 +555,6 @@ body.dark-mode .metrics-container::-webkit-scrollbar-thumb:hover {
 }
 
 /* ==========================================================================
-     Legend
-     ========================================================================== */
-.details-legend {
-  border-top: 1px solid #ddd;
-  padding: 15px;
-  background: white;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  margin: 5px 0;
-}
-
-.legend-color {
-  width: 30px;
-  height: 10px;
-  margin-right: 10px;
-  border-radius: 2px;
-}
-
-/* ==========================================================================
      Context Menu
      ========================================================================== */
 .context-menu {
