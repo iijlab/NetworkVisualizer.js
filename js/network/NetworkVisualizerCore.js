@@ -65,8 +65,16 @@ export class NetworkVisualizerCore {
         this.contextMenu = new NetworkContextMenu();
         this.pathManager = new NetworkPathManager(".network-path");
         this.themeManager = new NetworkThemeManager();
+        console.debug("Initializing NetworkRenderer with containerId:", this.containerId);
         this.networkRenderer = new NetworkRenderer(this.containerId, this.config);
-        this.networkUpdater = new NetworkUpdater(this.config);
+        if (!this.networkRenderer) {
+            console.error("Failed to initialize NetworkRenderer");
+        }
+        console.debug("Initializing NetworkUpdater");
+        this.networkUpdater = new NetworkUpdater(this.config, this);
+        if (!this.networkUpdater) {
+            console.error("Failed to initialize NetworkUpdater");
+        }
         this.statsManager = new NetworkStatsManager();
         this.detailsPanelManager = new DetailsPanelManager(detailsPanel, this.statsManager);
         this.networkInteraction = new NetworkInteraction(this.detailsPanelManager, this.contextMenu);
@@ -185,6 +193,9 @@ export class NetworkVisualizerCore {
             const url = new URL(window.location);
             url.searchParams.set("network", networkId);
             window.history.pushState({}, "", url);
+
+            // Update details panel with network overview
+            this.detailsPanelManager.updateNetworkOverview(networkData);
 
             // Start dynamic updates
             this.networkUpdater.startDynamicUpdates(networkId, this.mockDataGenerator);

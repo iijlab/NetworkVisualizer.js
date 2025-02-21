@@ -156,6 +156,8 @@ export class MockNetworkDataGenerator {
             return null;
         }
 
+        console.debug(`Generating update for network ${networkId}`);
+
         const changes = {
             nodes: {},
             links: {}
@@ -181,6 +183,7 @@ export class MockNetworkDataGenerator {
                 }
             });
 
+            console.debug(`Generating update for node ${nodeId}, new value: ${newValue}`);
             changes.nodes[nodeId] = {
                 metrics: {
                     current: {
@@ -215,6 +218,7 @@ export class MockNetworkDataGenerator {
 
             const capacity = link?.metrics?.current?.capacity ?? 100;
 
+            console.debug(`Generating update for link ${linkId}, new value: ${newValue}`);
             changes.links[linkId] = {
                 metrics: {
                     current: {

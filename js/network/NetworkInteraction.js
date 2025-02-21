@@ -8,6 +8,8 @@ export class NetworkInteraction {
 
     setCurrentNetwork(network) {
         this.currentNetwork = network;
+        // Update details panel with network overview when setting current network
+        this.updateDetailsWithNetworkOverview();
     }
 
     clearSelection() {

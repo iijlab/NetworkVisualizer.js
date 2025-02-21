@@ -100,17 +100,74 @@ export class DetailsPanelManager {
     }
 
     renderHistory(history) {
+        // Create plot data
+        const plotData = history.map(entry => ({
+            timestamp: new Date(entry.timestamp),
+            ...entry.metrics
+        }));
+
+        // Get metric names from the first entry
+        const metricNames = Object.keys(history[0].metrics);
+
+        // Create line plot for each metric
+        const plots = metricNames.map(metric => {
+            const plotContainer = document.createElement('div');
+            plotContainer.className = 'history-plot';
+
+            // Create a wrapper for the plot
+            const plotWrapper = document.createElement('div');
+            plotWrapper.style.width = '100%';
+            plotWrapper.style.height = '200px';
+            plotContainer.appendChild(plotWrapper);
+
+            const plot = Plot.plot({
+                width: 800, // Will be resized by CSS
+                height: 200,
+                marginLeft: 60,
+                marginRight: 30,
+                marginTop: 20,
+                marginBottom: 40,
+                style: {
+                    background: "transparent",
+                    overflow: "visible"
+                },
+                x: {
+                    type: "time",
+                    label: "Time",
+                    labelOffset: 30,
+                    tickRotate: -20
+                },
+                y: {
+                    label: `${metric} (%)`,
+                    domain: [0, 100],
+                    grid: true
+                },
+                marks: [
+                    Plot.ruleY([0, 25, 50, 75, 100]),
+                    Plot.line(plotData, {
+                        x: "timestamp",
+                        y: d => d[metric],
+                        stroke: "#2196F3",
+                        strokeWidth: 2,
+                        curve: "monotone"
+                    }),
+                    Plot.dot(plotData, {
+                        x: "timestamp",
+                        y: d => d[metric],
+                        fill: "#2196F3",
+                        r: 3
+                    })
+                ]
+            });
+
+            plotWrapper.appendChild(plot);
+            return plotContainer.outerHTML;
+        });
+
         return `
             <div class="history-section">
                 <h4>Metric History</h4>
-                <div class="history-entries">
-                    ${history.map(entry => `
-                        <div class="history-entry">
-                            <span class="timestamp">${new Date(entry.timestamp).toLocaleTimeString()}</span>
-                            ${this.renderMetrics(entry.metrics)}
-                        </div>
-                    `).join("")}
-                </div>
+                ${plots.join('')}
             </div>
         `;
     }

@@ -221,11 +221,19 @@ export class NetworkRenderer {
 
     updateNodeColor(nodeElement, metrics, isCluster = false) {
         const newColor = ColorUtils.getColorForMetric(metrics, this.config);
+        console.debug(`Updating node color to ${newColor} (isCluster: ${isCluster})`);
         nodeElement
             .transition()
             .duration(750)
             .style("fill", isCluster ? "white" : newColor)
             .style("stroke", newColor);
+    }
+
+    updateLinkColor(linkElements, metrics) {
+        const newColor = ColorUtils.getColorForMetric(metrics, this.config);
+        console.debug(`Updating link color to ${newColor}`);
+        linkElements.line.attr("stroke", newColor);
+        linkElements.arrow.attr("fill", newColor);
     }
 
     updateLinkPositions(linkGroups, nodes) {
@@ -296,18 +304,4 @@ export class NetworkRenderer {
         });
     }
 
-    updateNodeColor(nodeElement, metrics, isCluster = false) {
-        const newColor = ColorUtils.getColorForMetric(metrics, this.config);
-        nodeElement
-            .transition()
-            .duration(750)
-            .style("fill", isCluster ? "white" : newColor)
-            .style("stroke", newColor);
-    }
-
-    updateLinkColor(linkElements, metrics) {
-        const newColor = ColorUtils.getColorForMetric(metrics, this.config);
-        linkElements.line.attr("stroke", newColor);
-        linkElements.arrow.attr("fill", newColor);
-    }
 }

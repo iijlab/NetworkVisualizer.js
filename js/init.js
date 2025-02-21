@@ -29,13 +29,13 @@ async function loadMockData() {
         // Initialize mock data generators with root network
         const mockGenerators = {
             allocation: new MockNetworkDataGenerator(rootNetwork, {
-                updateInterval: 2000,
+                updateInterval: 5000, // Match MockDataGenerator's default
                 metricName: "allocation",
                 historyLength: 50,
                 historyInterval: 60000 // 1 minute intervals for demo
             }),
             load: new MockNetworkDataGenerator(rootNetwork, {
-                updateInterval: 2000,
+                updateInterval: 5000, // Match MockDataGenerator's default
                 metricName: "load",
                 historyLength: 50,
                 historyInterval: 60000
