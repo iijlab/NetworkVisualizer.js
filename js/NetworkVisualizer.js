@@ -3,46 +3,6 @@ import { NetworkVisualizerCore } from "./network/NetworkVisualizerCore.js";
 export class NetworkVisualizer extends NetworkVisualizerCore {
     constructor(containerId, config = {}) {
         super(containerId, config);
-
-        // Initialize MetricLegendManager
-        const legendContent = document.querySelector(".metric-legend .legend-content");
-        if (legendContent) {
-            this.setupMetricLegend(legendContent);
-        }
-    }
-
-    setupMetricLegend(legendContent) {
-        const metricName = this.config.visualization.metric;
-        const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
-        const ranges = this.config.visualization.ranges;
-
-        // Update the legend title
-        const legendTitle = document.querySelector(".metric-legend h4");
-        if (legendTitle) {
-            legendTitle.textContent = `${metricTitle} Legend`;
-        }
-
-        // Clear existing content
-        legendContent.innerHTML = "";
-
-        // Create legend items
-        ranges.forEach((range, index) => {
-            const label = index === 0 ? "0%" :
-                index === ranges.length - 1 ? `>${ranges[index - 1].max}%` :
-                    `${ranges[index - 1].max}-${range.max}%`;
-
-            const legendItem = document.createElement("div");
-            legendItem.className = "legend-item";
-            legendItem.innerHTML = `
-                <span class="legend-color" style="background: ${range.color}"></span>
-                <span class="legend-label">${label}</span>
-            `;
-            legendContent.appendChild(legendItem);
-        });
-    }
-
-    getCurrentNetwork() {
-        return this.currentNetwork;
     }
 
     async fetchNetworkData(networkId) {
@@ -77,42 +37,44 @@ export class NetworkVisualizer extends NetworkVisualizerCore {
         return null;
     }
 
-    calculateNetworkStats(network) {
-        const stats = {
-            totalNodes: network.nodes.length,
-            clusterNodes: network.nodes.filter(n => n.type === "cluster").length,
-            leafNodes: network.nodes.filter(n => n.type === "leaf").length,
-            totalLinks: network.links.length,
-            avgAllocation: {
-                nodes: 0,
-                links: 0
-            },
-            maxAllocation: {
-                nodes: 0,
-                links: 0
-            },
-            criticalResources: {
-                nodes: [],
-                links: []
-            }
-        };
+    // Public API methods
+    getNetworkPath() {
+        return this.pathManager.getCurrentPath();
+    }
 
-        // Calculate node statistics
-        const nodeAllocations = network.nodes.map(node => node.metrics?.current?.allocation ?? 0);
-        stats.avgAllocation.nodes = nodeAllocations.reduce((sum, val) => sum + val, 0) / stats.totalNodes;
-        stats.maxAllocation.nodes = Math.max(...nodeAllocations);
-        stats.criticalResources.nodes = network.nodes
-            .filter(node => (node.metrics?.current?.allocation ?? 0) > 75)
-            .map(node => node.id);
+    getCurrentMetric() {
+        return this.metricLegendManager.getCurrentMetric();
+    }
 
-        // Calculate link statistics
-        const linkAllocations = network.links.map(link => link.metrics?.current?.allocation ?? 0);
-        stats.avgAllocation.links = linkAllocations.reduce((sum, val) => sum + val, 0) / stats.totalLinks;
-        stats.maxAllocation.links = Math.max(...linkAllocations);
-        stats.criticalResources.links = network.links
-            .filter(link => (link.metrics?.current?.allocation ?? 0) > 75)
-            .map(link => `${link.source}->${link.target}`);
+    getMetricRanges() {
+        return this.metricLegendManager.getLegendRanges();
+    }
 
-        return stats;
+    getCurrentTheme() {
+        return this.themeManager.getCurrentTheme();
+    }
+
+    getCriticalResources() {
+        return this.statsManager.getCriticalResources();
+    }
+
+    getAverageAllocations() {
+        return this.statsManager.getAverageAllocations();
+    }
+
+    getMaxAllocations() {
+        return this.statsManager.getMaxAllocations();
+    }
+
+    getNodeCount(type) {
+        return this.statsManager.getNodeCount(type);
+    }
+
+    getLinkCount() {
+        return this.statsManager.getLinkCount();
+    }
+
+    hasHighUtilization() {
+        return this.statsManager.hasHighUtilization();
     }
 }

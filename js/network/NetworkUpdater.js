@@ -5,12 +5,16 @@ export class NetworkUpdater {
         this.config = config;
         this.updateInterval = null;
         this.lastUpdate = null;
-        this.dataCache = new Map();
+        this.dataCache = null;
         this.updateCallbacks = new Set();
         this.transitions = {
             duration: 750,
             ease: d3.easeCubic
         };
+    }
+
+    setDataCache(cache) {
+        this.dataCache = cache;
     }
 
     startDynamicUpdates(networkId, mockDataGenerator = null) {

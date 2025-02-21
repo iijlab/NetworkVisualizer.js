@@ -158,66 +158,6 @@ export class NetworkRenderer {
         return linkGroups;
     }
 
-    renderBidirectionalLink(linkGroup, links, nodes, onLinkClick) {
-        const sourceNode = nodes.find(n => n.id === links[0].source);
-        const targetNode = nodes.find(n => n.id === links[0].target);
-
-        const sourceRadius = GeometryUtils.calculateNodeRadius(sourceNode, this.config);
-        const targetRadius = GeometryUtils.calculateNodeRadius(targetNode, this.config);
-
-        const endpoints = GeometryUtils.calculateLinkEndpoints(
-            sourceNode, targetNode, sourceRadius, targetRadius
-        );
-
-        const midX = (sourceNode.x + targetNode.x) / 2;
-        const midY = (sourceNode.y + targetNode.y) / 2;
-
-        links.forEach(link => {
-            const isSourceToTarget = link.source === links[0].source;
-            const startNode = isSourceToTarget ? sourceNode : targetNode;
-            const endPoint = { x: midX, y: midY };
-
-            const startRadius = GeometryUtils.calculateNodeRadius(startNode, this.config);
-            const startX = startNode.x + startRadius * (endPoint.x - startNode.x) / endpoints.length;
-            const startY = startNode.y + startRadius * (endPoint.y - startNode.y) / endpoints.length;
-
-            const linkUnitX = isSourceToTarget ? endpoints.unitX : -endpoints.unitX;
-            const linkUnitY = isSourceToTarget ? endpoints.unitY : -endpoints.unitY;
-
-            const arrow = GeometryUtils.calculateArrowPoints(
-                endPoint.x,
-                endPoint.y,
-                linkUnitX,
-                linkUnitY,
-                this.config.links.arrowSize
-            );
-
-            this.drawLink(linkGroup, startX, startY, arrow, link, onLinkClick);
-        });
-    }
-
-    renderUnidirectionalLink(linkGroup, link, nodes, onLinkClick) {
-        const sourceNode = nodes.find(n => n.id === link.source);
-        const targetNode = nodes.find(n => n.id === link.target);
-
-        const sourceRadius = GeometryUtils.calculateNodeRadius(sourceNode, this.config);
-        const targetRadius = GeometryUtils.calculateNodeRadius(targetNode, this.config);
-
-        const endpoints = GeometryUtils.calculateLinkEndpoints(
-            sourceNode, targetNode, sourceRadius, targetRadius
-        );
-
-        const arrow = GeometryUtils.calculateArrowPoints(
-            endpoints.endX,
-            endpoints.endY,
-            endpoints.unitX,
-            endpoints.unitY,
-            this.config.links.arrowSize
-        );
-
-        this.drawLink(linkGroup, endpoints.startX, endpoints.startY, arrow, link, onLinkClick);
-    }
-
     drawLink(linkGroup, startX, startY, arrow, link, onLinkClick) {
         const svgNS = "http://www.w3.org/2000/svg";
         const group = document.createElementNS(svgNS, "g");
@@ -297,12 +237,31 @@ export class NetworkRenderer {
             const sourceRadius = GeometryUtils.calculateNodeRadius(sourceNode, this.config);
             const targetRadius = GeometryUtils.calculateNodeRadius(targetNode, this.config);
 
-            const endpoints = GeometryUtils.calculateLinkEndpoints(
-                sourceNode,
-                d.endPoint.x ? d.endPoint : targetNode, // Use midpoint for bidirectional links
-                sourceRadius,
-                targetRadius
-            );
+            let endpoints;
+            if (d.endPoint.x) { // Bidirectional link
+                const dx = d.endPoint.x - sourceNode.x;
+                const dy = d.endPoint.y - sourceNode.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const unitX = dx / length;
+                const unitY = dy / length;
+
+                endpoints = {
+                    startX: sourceNode.x + sourceRadius * unitX,
+                    startY: sourceNode.y + sourceRadius * unitY,
+                    endX: d.endPoint.x,
+                    endY: d.endPoint.y,
+                    unitX,
+                    unitY,
+                    length
+                };
+            } else { // Unidirectional link
+                endpoints = GeometryUtils.calculateLinkEndpoints(
+                    sourceNode,
+                    targetNode,
+                    sourceRadius,
+                    targetRadius
+                );
+            }
 
             const arrow = GeometryUtils.calculateArrowPoints(
                 endpoints.endX,

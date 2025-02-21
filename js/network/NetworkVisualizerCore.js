@@ -5,6 +5,8 @@ import { NetworkContextMenu } from "./NetworkContextMenu.js";
 import { NetworkPathManager } from "./NetworkPathManager.js";
 import { NetworkThemeManager } from "./NetworkThemeManager.js";
 import { DetailsPanelManager } from "./DetailsPanelManager.js";
+import { MetricLegendManager } from "./MetricLegendManager.js";
+import { NetworkStatsManager } from "./NetworkStatsManager.js";
 import { GeometryUtils } from "./utils/GeometryUtils.js";
 
 const DEFAULT_CONFIG = {
@@ -59,18 +61,25 @@ export class NetworkVisualizerCore {
         detailsPanel.classList.remove("hide");
         detailsPanel.classList.add("show");
 
+        // Initialize all managers
         this.contextMenu = new NetworkContextMenu();
         this.pathManager = new NetworkPathManager(".network-path");
         this.themeManager = new NetworkThemeManager();
         this.networkRenderer = new NetworkRenderer(this.containerId, this.config);
         this.networkUpdater = new NetworkUpdater(this.config);
-        this.detailsPanelManager = new DetailsPanelManager(detailsPanel);
+        this.statsManager = new NetworkStatsManager();
+        this.detailsPanelManager = new DetailsPanelManager(detailsPanel, this.statsManager);
         this.networkInteraction = new NetworkInteraction(this.detailsPanelManager, this.contextMenu);
+        this.metricLegendManager = new MetricLegendManager(this.config);
+
+        // Share data cache with NetworkUpdater
+        this.networkUpdater.setDataCache(this.dataCache);
 
         // Setup handlers
         this.setupResizeHandling();
         this.setupContainerClickHandler();
         this.setupNetworkInteractionHandlers();
+        this.setupUpdateCallbacks();
     }
 
     mergeConfig(defaultConfig, userConfig) {
@@ -111,6 +120,9 @@ export class NetworkVisualizerCore {
 
         // Also handle window resize events
         window.addEventListener("resize", handleResize);
+
+        // Store for cleanup
+        this.resizeObserver = resizeObserver;
     }
 
     setupContainerClickHandler() {
@@ -130,6 +142,15 @@ export class NetworkVisualizerCore {
         });
     }
 
+    setupUpdateCallbacks() {
+        this.networkUpdater.onUpdate((updates) => {
+            // Update network stats when changes occur
+            if (this.currentNetwork) {
+                this.statsManager.calculateNetworkStats(this.currentNetwork);
+            }
+        });
+    }
+
     async loadNetwork(networkId) {
         try {
             this.cleanup();
@@ -141,6 +162,9 @@ export class NetworkVisualizerCore {
             // Store current network data
             this.currentNetwork = networkData;
             this.networkInteraction.setCurrentNetwork(networkData);
+
+            // Calculate initial network stats
+            this.statsManager.calculateNetworkStats(networkData);
 
             // Update network path
             this.pathManager.updatePath(networkId, (pathNetworkId) => this.loadNetwork(pathNetworkId));
@@ -187,8 +211,24 @@ export class NetworkVisualizerCore {
         }
     }
 
+    destroy() {
+        this.cleanup();
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+        }
+        window.removeEventListener("resize", this.handleResize);
+    }
+
     setMockDataGenerator(generator) {
         this.mockDataGenerator = generator;
+    }
+
+    getCurrentNetwork() {
+        return this.currentNetwork;
+    }
+
+    getNetworkStats() {
+        return this.statsManager.getCurrentStats();
     }
 
     async fetchNetworkData(networkId) {
