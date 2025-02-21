@@ -13,13 +13,71 @@ export class MetricLegendManager {
     }
 
     setupLegend() {
-        const metricName = this.config.visualization.metric;
-        const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
-        const ranges = this.config.visualization.ranges;
+        const metrics = Object.keys(this.config.visualization.metrics);
+        const currentMetric = this.config.visualization.metric;
+        const currentMetricTitle = currentMetric.charAt(0).toUpperCase() + currentMetric.slice(1);
+        const ranges = this.config.visualization.metrics[currentMetric].ranges;
 
-        // Update the legend title
+        // Update the legend title and add dropdown if needed
         if (this.legendTitle) {
-            this.legendTitle.textContent = `${metricTitle} Legend`;
+            // Clear existing content
+            this.legendTitle.innerHTML = '';
+
+            // Create title text
+            const titleText = document.createElement('span');
+            titleText.textContent = 'Legend';
+            this.legendTitle.appendChild(titleText);
+
+            // Add dropdown if there's more than one metric
+            if (metrics.length > 1) {
+                const dropdownContainer = document.createElement('span');
+                dropdownContainer.style.marginLeft = '10px';
+
+                // Create dropdown button
+                const button = document.createElement('button');
+                button.className = 'button small dropdown';
+                button.setAttribute('type', 'button');
+                button.setAttribute('data-toggle', 'metric-dropdown');
+                button.textContent = currentMetricTitle;
+
+                // Create dropdown pane
+                const dropdown = document.createElement('div');
+                dropdown.className = 'dropdown-pane';
+                dropdown.id = 'metric-dropdown';
+                dropdown.setAttribute('data-dropdown', '');
+                dropdown.setAttribute('data-auto-focus', 'true');
+
+                // Create menu
+                const menu = document.createElement('ul');
+                menu.className = 'vertical menu';
+
+                metrics.forEach(metricName => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = '#';
+                    a.textContent = metricName.charAt(0).toUpperCase() + metricName.slice(1);
+                    a.onclick = (e) => {
+                        e.preventDefault();
+                        this.config.visualization.metric = metricName;
+                        this.setupLegend();
+                        // Trigger update event
+                        const event = new CustomEvent('metricChanged', { detail: { metric: metricName } });
+                        document.dispatchEvent(event);
+                    };
+                    li.appendChild(a);
+                    menu.appendChild(li);
+                });
+
+                dropdown.appendChild(menu);
+                dropdownContainer.appendChild(button);
+                dropdownContainer.appendChild(dropdown);
+                this.legendTitle.appendChild(dropdownContainer);
+
+                // Initialize Foundation dropdown
+                $(document).ready(() => {
+                    new Foundation.Dropdown(dropdown);
+                });
+            }
         }
 
         // Clear existing content

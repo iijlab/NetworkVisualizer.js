@@ -91,6 +91,14 @@ body {
   overflow: hidden;
 }
 
+.metric-dropdown-container {
+  margin-bottom: 0.5rem;
+}
+
+.metric-dropdown-container .button {
+  margin: 0;
+}
+
 .visualization-container {
   position: relative;
   flex: 1;

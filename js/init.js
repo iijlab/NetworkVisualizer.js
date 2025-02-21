@@ -105,20 +105,6 @@ async function initializeVisualizer() {
             await visualizer.loadNetwork(networkId);
         });
 
-        // Add metric switch buttons
-        const metricsContainer = document.createElement("div");
-        metricsContainer.className = "metrics-switch";
-        metricsContainer.style.cssText = "position: absolute; top: 10px; right: 10px; z-index: 100;";
-
-        Object.keys(config.visualization.metrics).forEach(metricName => {
-            const button = document.createElement("button");
-            button.textContent = metricName.charAt(0).toUpperCase() + metricName.slice(1);
-            button.style.cssText = "margin: 0 5px; padding: 5px 10px; cursor: pointer;";
-            button.onclick = () => visualizer.switchMetric(metricName);
-            metricsContainer.appendChild(button);
-        });
-
-        document.querySelector(".visualization-container").appendChild(metricsContainer);
 
     } catch (error) {
         console.error("Error initializing visualizer:", error);

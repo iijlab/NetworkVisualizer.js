@@ -72,6 +72,15 @@ export class NetworkVisualizerCore {
         this.networkInteraction = new NetworkInteraction(this.detailsPanelManager, this.contextMenu);
         this.metricLegendManager = new MetricLegendManager(this.config);
 
+        // Listen for metric changes
+        document.addEventListener('metricChanged', (event) => {
+            const metricName = event.detail.metric;
+            this.config.visualization.metric = metricName;
+            if (this.currentNetwork) {
+                this.createVisualization(this.currentNetwork);
+            }
+        });
+
         // Share data cache with NetworkUpdater
         this.networkUpdater.setDataCache(this.dataCache);
 
