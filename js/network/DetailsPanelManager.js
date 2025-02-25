@@ -100,74 +100,38 @@ export class DetailsPanelManager {
     }
 
     renderHistory(history) {
-        // Create plot data
-        const plotData = history.map(entry => ({
-            timestamp: new Date(entry.timestamp),
-            ...entry.metrics
-        }));
+        // Create a simple table instead of using Plot
+        const metricNames = Object.keys(history[0]).filter(key => key !== 'timestamp');
+        const metricName = metricNames[0]; // Just use the first metric
 
-        // Get metric names from the first entry
-        const metricNames = Object.keys(history[0].metrics);
+        // Take the last 5 entries for simplicity
+        const recentHistory = history.slice(-5);
 
-        // Create line plot for each metric
-        const plots = metricNames.map(metric => {
-            const plotContainer = document.createElement('div');
-            plotContainer.className = 'history-plot';
-
-            // Create a wrapper for the plot
-            const plotWrapper = document.createElement('div');
-            plotWrapper.style.width = '100%';
-            plotWrapper.style.height = '200px';
-            plotContainer.appendChild(plotWrapper);
-
-            const plot = Plot.plot({
-                width: 800, // Will be resized by CSS
-                height: 200,
-                marginLeft: 60,
-                marginRight: 30,
-                marginTop: 20,
-                marginBottom: 40,
-                style: {
-                    background: "transparent",
-                    overflow: "visible"
-                },
-                x: {
-                    type: "time",
-                    label: "Time",
-                    labelOffset: 30,
-                    tickRotate: -20
-                },
-                y: {
-                    label: `${metric} (%)`,
-                    domain: [0, 100],
-                    grid: true
-                },
-                marks: [
-                    Plot.ruleY([0, 25, 50, 75, 100]),
-                    Plot.line(plotData, {
-                        x: "timestamp",
-                        y: d => d[metric],
-                        stroke: "#2196F3",
-                        strokeWidth: 2,
-                        curve: "monotone"
-                    }),
-                    Plot.dot(plotData, {
-                        x: "timestamp",
-                        y: d => d[metric],
-                        fill: "#2196F3",
-                        r: 3
-                    })
-                ]
-            });
-
-            plotWrapper.appendChild(plot);
-            return plotContainer.outerHTML;
-        });
+        const rows = recentHistory.map(entry => {
+            const timestamp = new Date(entry.timestamp);
+            const value = entry[metricName];
+            return `
+                <tr>
+                    <td>${timestamp.toLocaleTimeString()}</td>
+                    <td>${value.toFixed(1)}%</td>
+                </tr>
+            `;
+        }).join('');
 
         return `
             <div class="history-section">
-                <h4>Metric History</h4>
-                ${plots.join('')}
+                <h4>Recent ${metricName.charAt(0).toUpperCase() + metricName.slice(1)} History</h4>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
             </div>
         `;
     }

@@ -26,6 +26,7 @@ const DEFAULT_CONFIG = {
     },
     visualization: {
         metric: "allocation",
+        availableMetrics: ["allocation", "load"],
         ranges: [
             { max: 0, color: "#006994" },
             { max: 45, color: "#4CAF50" },
@@ -99,18 +100,18 @@ export class NetworkVisualizerCore {
         this.setupUpdateCallbacks();
     }
 
-    mergeConfig(defaultConfig, userConfig) {
+    mergeConfig(defaultConfig, userConfig = {}) {
         return {
             ...defaultConfig,
             ...userConfig,
             nodes: {
                 ...defaultConfig.nodes,
-                ...userConfig.nodes,
-                leaf: { ...defaultConfig.nodes.leaf, ...userConfig.nodes?.leaf },
-                cluster: { ...defaultConfig.nodes.cluster, ...userConfig.nodes?.cluster }
+                ...(userConfig.nodes || {}),
+                leaf: { ...defaultConfig.nodes.leaf, ...(userConfig.nodes?.leaf || {}) },
+                cluster: { ...defaultConfig.nodes.cluster, ...(userConfig.nodes?.cluster || {}) }
             },
-            links: { ...defaultConfig.links, ...userConfig.links },
-            visualization: { ...defaultConfig.visualization, ...userConfig.visualization }
+            links: { ...defaultConfig.links, ...(userConfig.links || {}) },
+            visualization: { ...defaultConfig.visualization, ...(userConfig.visualization || {}) }
         };
     }
 
@@ -170,26 +171,37 @@ export class NetworkVisualizerCore {
 
     async loadNetwork(networkId) {
         try {
+            // Stop any existing updates
+            this.networkUpdater.stopDynamicUpdates();
+
+            // Clean up existing visualization
             this.cleanup();
+
+            // Fetch and validate network data
             const networkData = await this.fetchNetworkData(networkId);
             if (!networkData) {
                 throw new Error(`No data found for network: ${networkId}`);
             }
 
-            // Store current network data
+            // Ensure the network data has the required structure
+            if (!networkData.nodes || !Array.isArray(networkData.nodes)) {
+                throw new Error(`Invalid network data structure for network: ${networkId}`);
+            }
+
+            // Store current network data and update interaction state
             this.currentNetwork = networkData;
             this.networkInteraction.setCurrentNetwork(networkData);
 
             // Calculate initial network stats
             this.statsManager.calculateNetworkStats(networkData);
 
-            // Update network path
+            // Update network path before visualization
             this.pathManager.updatePath(networkId, (pathNetworkId) => this.loadNetwork(pathNetworkId));
 
             // Create visualization
             await this.createVisualization(networkData);
 
-            // Update URL
+            // Update URL after successful visualization
             const url = new URL(window.location);
             url.searchParams.set("network", networkId);
             window.history.pushState({}, "", url);
@@ -197,10 +209,15 @@ export class NetworkVisualizerCore {
             // Update details panel with network overview
             this.detailsPanelManager.updateNetworkOverview(networkData);
 
-            // Start dynamic updates
+            // Add to mock data generator if needed
+            if (this.mockDataGenerator && !this.mockDataGenerator.hasNetwork(networkId)) {
+                this.mockDataGenerator.addNetwork(networkData);
+            }
+
+            // Start dynamic updates after everything is set up
             this.networkUpdater.startDynamicUpdates(networkId, this.mockDataGenerator);
 
-            console.log(`Network ${networkId} loaded and updates started`);
+            console.log(`Network ${networkId} loaded and activated successfully`);
         } catch (error) {
             console.error("Error loading network data:", error);
             throw error;
@@ -208,10 +225,28 @@ export class NetworkVisualizerCore {
     }
 
     createVisualization(data) {
-        const onNodeClick = (event, nodeElement, selectionHighlight) => {
-            const nodeData = this.networkInteraction.handleNodeClick(event, nodeElement, selectionHighlight);
-            if (nodeData.type === "cluster" && nodeData.childNetwork) {
-                this.loadNetwork(nodeData.childNetwork);
+        const onNodeClick = async (event, nodeElement, selectionHighlight) => {
+            try {
+                const nodeData = this.networkInteraction.handleNodeClick(event, nodeElement, selectionHighlight);
+                if (nodeData && nodeData.type === "cluster" && nodeData.childNetwork) {
+                    console.log(`Attempting to load cluster network: ${nodeData.childNetwork}`);
+
+                    // Pre-fetch the network data to verify it exists
+                    const networkData = await this.fetchNetworkData(nodeData.childNetwork);
+                    if (!networkData) {
+                        throw new Error(`No data found for network: ${nodeData.childNetwork}`);
+                    }
+
+                    // Load the cluster network
+                    await this.loadNetwork(nodeData.childNetwork);
+                    console.log(`Successfully loaded cluster network: ${nodeData.childNetwork}`);
+                }
+            } catch (error) {
+                console.error("Error handling node click:", error);
+                // Revert selection on error
+                this.networkInteraction.clearSelection();
+                // Re-throw to allow error handling up the chain
+                throw error;
             }
         };
 

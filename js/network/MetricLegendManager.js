@@ -13,75 +13,83 @@ export class MetricLegendManager {
     }
 
     setupLegend() {
-        const metrics = Object.keys(this.config.visualization.metrics);
         const currentMetric = this.config.visualization.metric;
         const currentMetricTitle = currentMetric.charAt(0).toUpperCase() + currentMetric.slice(1);
-        const ranges = this.config.visualization.metrics[currentMetric].ranges;
+        const ranges = this.config.visualization.ranges;
 
-        // Update the legend title and add dropdown if needed
+        // Clear existing content in title (we'll keep it empty)
         if (this.legendTitle) {
-            // Clear existing content
             this.legendTitle.innerHTML = '';
-
-            // Create title text
-            const titleText = document.createElement('span');
-            titleText.textContent = 'Legend';
-            this.legendTitle.appendChild(titleText);
-
-            // Add dropdown if there's more than one metric
-            if (metrics.length > 1) {
-                const dropdownContainer = document.createElement('span');
-                dropdownContainer.style.marginLeft = '10px';
-
-                // Create dropdown button
-                const button = document.createElement('button');
-                button.className = 'button small dropdown';
-                button.setAttribute('type', 'button');
-                button.setAttribute('data-toggle', 'metric-dropdown');
-                button.textContent = currentMetricTitle;
-
-                // Create dropdown pane
-                const dropdown = document.createElement('div');
-                dropdown.className = 'dropdown-pane';
-                dropdown.id = 'metric-dropdown';
-                dropdown.setAttribute('data-dropdown', '');
-                dropdown.setAttribute('data-auto-focus', 'true');
-
-                // Create menu
-                const menu = document.createElement('ul');
-                menu.className = 'vertical menu';
-
-                metrics.forEach(metricName => {
-                    const li = document.createElement('li');
-                    const a = document.createElement('a');
-                    a.href = '#';
-                    a.textContent = metricName.charAt(0).toUpperCase() + metricName.slice(1);
-                    a.onclick = (e) => {
-                        e.preventDefault();
-                        this.config.visualization.metric = metricName;
-                        this.setupLegend();
-                        // Trigger update event
-                        const event = new CustomEvent('metricChanged', { detail: { metric: metricName } });
-                        document.dispatchEvent(event);
-                    };
-                    li.appendChild(a);
-                    menu.appendChild(li);
-                });
-
-                dropdown.appendChild(menu);
-                dropdownContainer.appendChild(button);
-                dropdownContainer.appendChild(dropdown);
-                this.legendTitle.appendChild(dropdownContainer);
-
-                // Initialize Foundation dropdown
-                $(document).ready(() => {
-                    new Foundation.Dropdown(dropdown);
-                });
-            }
         }
 
-        // Clear existing content
+        // Clear existing content in legend
         this.legendContent.innerHTML = "";
+
+        // Create dropdown button and add it to legend content (if available)
+        if (this.config.visualization.availableMetrics) {
+            // Create dropdown container
+            const dropdownContainer = document.createElement("div");
+            dropdownContainer.className = "legend-dropdown";
+            dropdownContainer.style.marginRight = "1rem";
+
+            // Create dropdown button
+            const button = document.createElement('button');
+            button.className = 'button small dropdown';
+            button.setAttribute('type', 'button');
+            button.setAttribute('data-toggle', 'metric-dropdown');
+            button.textContent = currentMetricTitle;
+
+            // Create dropdown pane
+            const dropdown = document.createElement('div');
+            dropdown.className = 'dropdown-pane';
+            dropdown.id = 'metric-dropdown';
+            dropdown.setAttribute('data-dropdown', '');
+            dropdown.setAttribute('data-auto-focus', 'true');
+            dropdown.setAttribute('data-position', 'top');
+            dropdown.setAttribute('data-alignment', 'left');
+            dropdown.style.minWidth = '120px';
+
+            // Create menu
+            const menu = document.createElement('ul');
+            menu.className = 'vertical menu';
+
+            this.config.visualization.availableMetrics.forEach(metricName => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = '#';
+                a.textContent = metricName.charAt(0).toUpperCase() + metricName.slice(1);
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    this.config.visualization.metric = metricName;
+                    this.setupLegend();
+                    // Trigger update event
+                    const event = new CustomEvent('metricChanged', { detail: { metric: metricName } });
+                    document.dispatchEvent(event);
+                };
+                li.appendChild(a);
+                menu.appendChild(li);
+            });
+
+            dropdown.appendChild(menu);
+            dropdownContainer.appendChild(button);
+            dropdownContainer.appendChild(dropdown);
+
+            // Add data-toggle attribute to button
+            button.setAttribute('data-toggle', dropdown.id);
+
+            // Add dropdown container to legend content
+            this.legendContent.appendChild(dropdownContainer);
+
+            // Initialize Foundation dropdown
+            $(document).ready(() => {
+                try {
+                    // Re-initialize Foundation on the document
+                    $(document).foundation();
+                } catch (error) {
+                    console.warn("Error initializing dropdown:", error);
+                }
+            });
+        }
 
         // Create legend items
         ranges.forEach((range, index) => {

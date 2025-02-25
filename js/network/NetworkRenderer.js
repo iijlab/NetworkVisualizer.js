@@ -71,12 +71,33 @@ export class NetworkRenderer {
             .attr("text-anchor", "middle")
             .text(d => d.id);
 
-        // Add click handlers
-        nodes.on("click", (event, d) => {
-            event.stopPropagation();
-            const circle = event.currentTarget.querySelector("circle:not(.selection-highlight)");
-            const highlight = event.currentTarget.querySelector(".selection-highlight");
-            onNodeClick(event, circle, highlight);
+        // Add click handlers and store data
+        nodes.each(function (d) {
+            const node = d3.select(this);
+            const circle = node.select("circle:not(.selection-highlight)");
+            const highlight = node.select(".selection-highlight");
+
+            // Store node data
+            circle.node().__data__ = d;
+
+            // Make cluster nodes more interactive
+            if (d.type === "cluster") {
+                circle
+                    .style("cursor", "pointer")
+                    .attr("class", "cluster-node");
+            }
+
+            // Add click handler to the entire node group
+            node.on("click", (event) => {
+                event.stopPropagation();
+                onNodeClick(event, circle.node(), highlight.node());
+            });
+
+            // Ensure the circle itself is clickable
+            circle.on("click", (event) => {
+                event.stopPropagation();
+                onNodeClick(event, circle.node(), highlight.node());
+            });
         });
 
         return nodes;

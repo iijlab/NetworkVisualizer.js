@@ -15,7 +15,9 @@ export class MockNetworkDataGenerator {
         };
 
         // Initialize generator for root network
-        this.initializeNetworkGenerator(baseNetwork);
+        if (baseNetwork) {
+            this.initializeNetworkGenerator(baseNetwork);
+        }
         console.log("MockNetworkDataGenerator initialized with metric:", this.options.metricName);
     }
 
@@ -79,9 +81,7 @@ export class MockNetworkDataGenerator {
 
             history.push({
                 timestamp: timestamp.toISOString(),
-                metrics: {
-                    [this.options.metricName]: value
-                }
+                [this.options.metricName]: value
             });
         }
 
@@ -178,9 +178,7 @@ export class MockNetworkDataGenerator {
 
             node.metrics.history.push({
                 timestamp: currentTime,
-                metrics: {
-                    [this.options.metricName]: newValue
-                }
+                [this.options.metricName]: newValue
             });
 
             console.debug(`Generating update for node ${nodeId}, new value: ${newValue}`);
@@ -211,9 +209,7 @@ export class MockNetworkDataGenerator {
 
             link.metrics.history.push({
                 timestamp: currentTime,
-                metrics: {
-                    [this.options.metricName]: newValue
-                }
+                [this.options.metricName]: newValue
             });
 
             const capacity = link?.metrics?.current?.capacity ?? 100;

@@ -7,20 +7,35 @@ export class NetworkInteraction {
     }
 
     setCurrentNetwork(network) {
+        // Clear any existing selection when setting a new network
+        this.clearSelection();
+
+        // Set the new network
         this.currentNetwork = network;
-        // Update details panel with network overview when setting current network
+
+        // Update details panel with network overview
         this.updateDetailsWithNetworkOverview();
+
+        console.log(`Network ${network.metadata.id} set as current network`);
     }
 
     clearSelection() {
         if (this.selectedElement) {
-            // Hide selection highlight
-            if (this.selectedElement.previousSibling) {
-                this.selectedElement.previousSibling.setAttribute("opacity", "0");
+            try {
+                // Hide selection highlight
+                if (this.selectedElement.previousSibling) {
+                    this.selectedElement.previousSibling.setAttribute("opacity", "0");
+                }
+                this.selectedElement = null;
+
+                // Update details panel with network overview
+                this.updateDetailsWithNetworkOverview();
+
+                console.log("Selection cleared successfully");
+            } catch (error) {
+                console.error("Error clearing selection:", error);
             }
-            this.selectedElement = null;
         }
-        this.updateDetailsWithNetworkOverview();
     }
 
     updateDetailsWithNetworkOverview() {
