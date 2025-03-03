@@ -4,7 +4,7 @@ export class MockNetworkDataGenerator {
         this.options = {
             updateInterval: 5000,
             maxVariation: 10,
-            metricName: "allocation",
+            metricName: "allocation", // Keep allocation as default
             historyLength: 50,
             historyInterval: 300000, // 5 minutes in milliseconds
             ranges: {

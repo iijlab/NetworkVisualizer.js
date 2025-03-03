@@ -6,13 +6,49 @@ export class ColorUtils {
         // Debug log for troubleshooting
         console.debug(`Getting color for metric ${metricName}, value: ${value}`);
 
-        const range = config.visualization.ranges.find(r => value <= r.max);
-        const color = range ? range.color : config.visualization.ranges[config.visualization.ranges.length - 1].color;
+        // Get metric configuration
+        const metricConfig = config.visualization.metrics?.[metricName];
 
-        // Debug log for selected color
-        console.debug(`Selected color: ${color}`);
+        if (!metricConfig) {
+            console.warn(`No configuration found for metric: ${metricName}`);
+            // Fall back to legacy ranges
+            const range = config.visualization.ranges.find(r => value <= r.max);
+            return range ? range.color : config.visualization.ranges[config.visualization.ranges.length - 1].color;
+        }
 
-        return color;
+        // Handle different metric types
+        if (metricConfig.type === "continuous") {
+            // For continuous metrics, interpolate between min and max colors
+            const colorScale = metricConfig.colorScale;
+            if (!colorScale || !colorScale.min || !colorScale.max) {
+                console.warn(`Invalid color scale for continuous metric: ${metricName}`);
+                return "#006994"; // Default blue color
+            }
+
+            // Normalize value between 0 and 1
+            const factor = Math.max(0, Math.min(1, value / 100));
+            const color = this.interpolateColors(colorScale.min, colorScale.max, factor);
+
+            // Debug log for selected color
+            console.debug(`Selected continuous color: ${color} (factor: ${factor})`);
+
+            return color;
+        } else {
+            // For range-based metrics
+            const ranges = metricConfig.ranges || config.visualization.ranges;
+            if (!ranges || !ranges.length) {
+                console.warn(`No ranges found for metric: ${metricName}`);
+                return "#006994"; // Default blue color
+            }
+
+            const range = ranges.find(r => value <= r.max);
+            const color = range ? range.color : ranges[ranges.length - 1].color;
+
+            // Debug log for selected color
+            console.debug(`Selected range color: ${color}`);
+
+            return color;
+        }
     }
 
     static interpolateColors(color1, color2, factor) {

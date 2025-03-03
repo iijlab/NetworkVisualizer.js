@@ -111,9 +111,18 @@ export class NetworkUpdater {
                             // Determine if it's a cluster node
                             const isCluster = nodeData.type === "cluster";
 
+                            // Store the current selection highlight state before updating
+                            const isSelected = this.visualizerCore.networkInteraction.getSelectedElement() === circle.node();
+                            const highlightOpacity = nodeSelection.select(".selection-highlight").attr("opacity");
+
                             // Update visual appearance using NetworkRenderer's method
                             console.debug(`Updating node ${id} appearance (isCluster: ${isCluster})`);
                             this.visualizerCore.networkRenderer.updateNodeColor(circle, change.metrics, isCluster);
+
+                            // Restore selection highlight if this was the selected node
+                            if (isSelected && highlightOpacity > 0) {
+                                nodeSelection.select(".selection-highlight").attr("opacity", highlightOpacity);
+                            }
 
                             // Update details panel if this is the selected node
                             if (selectedElement) {
@@ -164,9 +173,20 @@ export class NetworkUpdater {
                 console.debug(`Found line element: ${!line.empty()}, arrow element: ${!arrow.empty()}`);
 
                 if (!line.empty() && !arrow.empty()) {
+                    // Check if this is the selected link
+                    const isSelected = this.visualizerCore.networkInteraction.getSelectedElement() === line.node();
+                    const linkGroup = line.closest("g");
+                    const selectionHighlight = d3.select(linkGroup).select(".link-selection");
+                    const highlightOpacity = selectionHighlight.attr("opacity");
+
                     const linkElements = { line, arrow };
                     // Update visual appearance using NetworkRenderer's method
                     this.visualizerCore.networkRenderer.updateLinkColor(linkElements, change.metrics);
+
+                    // Restore selection highlight if this was the selected link
+                    if (isSelected && highlightOpacity > 0) {
+                        selectionHighlight.attr("opacity", highlightOpacity);
+                    }
                 } else {
                     console.warn(`Could not find link elements for ${source}->${target}`);
                 }

@@ -15,7 +15,10 @@ export class MetricLegendManager {
     setupLegend() {
         const currentMetric = this.config.visualization.metric;
         const currentMetricTitle = currentMetric.charAt(0).toUpperCase() + currentMetric.slice(1);
-        const ranges = this.config.visualization.ranges;
+
+        // Get metric configuration
+        const metricConfig = this.config.visualization.metrics?.[currentMetric];
+        const metricType = metricConfig?.type || "range";
 
         // Clear existing content in title (we'll keep it empty)
         if (this.legendTitle) {
@@ -91,20 +94,91 @@ export class MetricLegendManager {
             });
         }
 
-        // Create legend items
-        ranges.forEach((range, index) => {
-            const label = index === 0 ? "0%" :
-                index === ranges.length - 1 ? `>${ranges[index - 1].max}%` :
-                    `${ranges[index - 1].max}-${range.max}%`;
+        // Create legend items based on metric type
+        if (metricType === "continuous" && metricConfig?.colorScale) {
+            // Create continuous gradient legend
+            const colorScale = metricConfig.colorScale;
 
-            const legendItem = document.createElement("div");
-            legendItem.className = "legend-item";
-            legendItem.innerHTML = `
-                <span class="legend-color" style="background: ${range.color}"></span>
-                <span class="legend-label">${label}</span>
-            `;
-            this.legendContent.appendChild(legendItem);
-        });
+            // Create a container for the legend that will be on the same line as the dropdown
+            const legendContainer = document.createElement("div");
+            legendContainer.style.display = "flex";
+            legendContainer.style.alignItems = "center";
+            legendContainer.style.width = "100%";
+
+            // Add the dropdown container to the legend container
+            if (this.legendContent.querySelector(".legend-dropdown")) {
+                const dropdownContainer = this.legendContent.querySelector(".legend-dropdown");
+                this.legendContent.removeChild(dropdownContainer);
+                legendContainer.appendChild(dropdownContainer);
+            }
+
+            // Create the gradient legend
+            const gradientLegend = document.createElement("div");
+            gradientLegend.className = "legend-gradient";
+            gradientLegend.style.display = "flex";
+            gradientLegend.style.flexDirection = "column";
+            gradientLegend.style.flex = "1";
+            gradientLegend.style.marginLeft = "15px";
+
+            // Create gradient bar
+            const gradientBar = document.createElement("div");
+            gradientBar.className = "gradient-bar";
+            gradientBar.style.height = "20px";
+            gradientBar.style.width = "100%";
+            gradientBar.style.background = `linear-gradient(to right, ${colorScale.min}, ${colorScale.max})`;
+            gradientBar.style.borderRadius = "3px";
+            gradientBar.style.marginBottom = "2px";
+
+            // Create labels container
+            const labelsContainer = document.createElement("div");
+            labelsContainer.className = "gradient-labels";
+            labelsContainer.style.display = "flex";
+            labelsContainer.style.justifyContent = "space-between";
+
+            // Create min label
+            const minLabel = document.createElement("div");
+            minLabel.className = "gradient-label";
+            minLabel.textContent = "0%";
+
+            // Create max label
+            const maxLabel = document.createElement("div");
+            maxLabel.className = "gradient-label";
+            maxLabel.textContent = "100%";
+
+            // Assemble the gradient legend
+            labelsContainer.appendChild(minLabel);
+            labelsContainer.appendChild(maxLabel);
+            gradientLegend.appendChild(gradientBar);
+            gradientLegend.appendChild(labelsContainer);
+
+            // Add the gradient legend to the container
+            legendContainer.appendChild(gradientLegend);
+
+            // Add the container to the legend content
+            this.legendContent.appendChild(legendContainer);
+        } else {
+            // Use range-based legend
+            const ranges = metricConfig?.ranges || this.config.visualization.ranges;
+
+            if (!ranges || ranges.length === 0) {
+                console.warn("No ranges found for metric legend");
+                return;
+            }
+
+            ranges.forEach((range, index) => {
+                const label = index === 0 ? "0%" :
+                    index === ranges.length - 1 ? `>${ranges[index - 1].max}%` :
+                        `${ranges[index - 1].max}-${range.max}%`;
+
+                const legendItem = document.createElement("div");
+                legendItem.className = "legend-item";
+                legendItem.innerHTML = `
+                    <span class="legend-color" style="background: ${range.color}"></span>
+                    <span class="legend-label">${label}</span>
+                `;
+                this.legendContent.appendChild(legendItem);
+            });
+        }
     }
 
     updateLegend(newConfig) {

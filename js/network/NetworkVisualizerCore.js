@@ -27,13 +27,34 @@ const DEFAULT_CONFIG = {
     visualization: {
         metric: "allocation",
         availableMetrics: ["allocation", "load"],
+        // Legacy ranges for backward compatibility
         ranges: [
             { max: 0, color: "#006994" },
             { max: 45, color: "#4CAF50" },
             { max: 55, color: "#FFC107" },
             { max: 75, color: "#FF9800" },
             { max: 100, color: "#f44336" }
-        ]
+        ],
+        // Metric-specific configurations
+        metrics: {
+            allocation: {
+                type: "range",
+                ranges: [
+                    { max: 0, color: "#006994" },
+                    { max: 45, color: "#4CAF50" },
+                    { max: 55, color: "#FFC107" },
+                    { max: 75, color: "#FF9800" },
+                    { max: 100, color: "#f44336" }
+                ]
+            },
+            load: {
+                type: "continuous",
+                colorScale: {
+                    min: "#00ff00",
+                    max: "#ff0000"
+                }
+            }
+        }
     }
 };
 
@@ -80,6 +101,11 @@ export class NetworkVisualizerCore {
         this.detailsPanelManager = new DetailsPanelManager(detailsPanel, this.statsManager);
         this.networkInteraction = new NetworkInteraction(this.detailsPanelManager, this.contextMenu);
         this.metricLegendManager = new MetricLegendManager(this.config);
+
+        // Make the selected element accessible to the updater
+        Object.defineProperty(this, 'selectedElement', {
+            get: () => this.networkInteraction.getSelectedElement()
+        });
 
         // Listen for metric changes
         document.addEventListener('metricChanged', (event) => {
@@ -254,7 +280,24 @@ export class NetworkVisualizerCore {
             this.networkInteraction.handleLinkClick(event, linkElement, selectionHighlight);
         };
 
-        this.networkRenderer.createVisualization(data, onNodeClick, onLinkClick);
+        const svg = this.networkRenderer.createVisualization(data, onNodeClick, onLinkClick);
+
+        // Set up context menu handlers for all nodes and links
+        d3.select(svg).selectAll("g.node").each((d, i, nodes) => {
+            const node = nodes[i];
+            const circle = d3.select(node).select("circle:not(.selection-highlight)").node();
+            if (circle) {
+                this.networkInteraction.setupContextMenuHandlers(circle, "node");
+            }
+        });
+
+        d3.select(svg).selectAll("g.link").each((d, i, links) => {
+            const link = links[i];
+            const line = d3.select(link).select("line.link-half").node();
+            if (line) {
+                this.networkInteraction.setupContextMenuHandlers(line, "link");
+            }
+        });
     }
 
     cleanup() {

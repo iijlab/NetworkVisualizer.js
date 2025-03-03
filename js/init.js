@@ -60,7 +60,7 @@ async function loadMockData() {
         // Initialize mock data generator with root network
         const mockGenerator = new MockNetworkDataGenerator(rootNetwork, {
             updateInterval: 5000,
-            metricName: 'allocation',
+            metricName: 'allocation', // Keep allocation as default
             historyLength: 50,
             historyInterval: 60000 // 1 minute intervals for demo
         });
@@ -93,7 +93,7 @@ async function initializeVisualizer() {
                     arrowSize: 5
                 },
                 visualization: {
-                    metric: "allocation",
+                    metric: "allocation", // Keep allocation as default
                     availableMetrics: ["allocation", "load"],
                     ranges: [
                         { max: 0, color: "#006994" },
@@ -101,7 +101,27 @@ async function initializeVisualizer() {
                         { max: 55, color: "#FFC107" },
                         { max: 75, color: "#FF9800" },
                         { max: 100, color: "#f44336" }
-                    ]
+                    ],
+                    // Added metric-specific configurations
+                    metrics: {
+                        allocation: {
+                            type: "range",
+                            ranges: [
+                                { max: 0, color: "#006994" },
+                                { max: 45, color: "#4CAF50" },
+                                { max: 55, color: "#FFC107" },
+                                { max: 75, color: "#FF9800" },
+                                { max: 100, color: "#f44336" }
+                            ]
+                        },
+                        load: {
+                            type: "continuous",
+                            colorScale: {
+                                min: "#00ff00",
+                                max: "#ff0000"
+                            }
+                        }
+                    }
                 }
             };
         } else {
