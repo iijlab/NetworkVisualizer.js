@@ -405,10 +405,47 @@ body.dark-mode .gradient-labels {
 }
 
 .details-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.detail-section {
+  margin-bottom: 20px;
   background: white;
-  border: 1px solid #ddd;
   border-radius: 4px;
-  padding: 1rem;
+  overflow: hidden;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #333;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.detail-section table td {
+  padding: 8px 0;
+  line-height: 1.4;
+}
+
+.detail-section table td:first-child {
+  color: #666;
+  width: 40%;
+  padding-right: 10px;
+}
+
+.detail-section table td:last-child {
+  font-weight: 500;
 }
 
 .metrics-container {

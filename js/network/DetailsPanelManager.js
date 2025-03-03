@@ -2,8 +2,51 @@ export class DetailsPanelManager {
     constructor(detailsPanel, statsManager) {
         this.detailsPanel = detailsPanel;
         this.statsManager = statsManager;
+        this.contentElement = this.detailsPanel.querySelector('.details-container');
+        if (!this.contentElement) {
+            this.contentElement = document.createElement('div');
+            this.contentElement.className = 'details-container';
+            this.detailsPanel.appendChild(this.contentElement);
+        }
         this.plots = new Map(); // Store plot objects
         this.setupResponsiveUpdates();
+        this.setupMutationObserver();
+    }
+
+    setupMutationObserver() {
+        // Create a MutationObserver to watch for DOM changes
+        this.observer = new MutationObserver((mutations) => {
+            let shouldTriggerResize = false;
+
+            // Check if any plot containers were added
+            mutations.forEach(mutation => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) { // Element node
+                            if (node.id === 'metrics-plot' ||
+                                node.classList?.contains('history-plot') ||
+                                node.querySelector?.('#metrics-plot') ||
+                                node.querySelector?.('.history-plot')) {
+                                shouldTriggerResize = true;
+                            }
+                        }
+                    });
+                }
+            });
+
+            // If plot containers were added, trigger a resize after a short delay
+            if (shouldTriggerResize) {
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('resize'));
+                }, 100);
+            }
+        });
+
+        // Start observing the details panel for changes
+        this.observer.observe(this.detailsPanel, {
+            childList: true,
+            subtree: true
+        });
     }
 
     setupResponsiveUpdates() {
@@ -40,6 +83,7 @@ export class DetailsPanelManager {
     prepareMetricsData(network) {
         const timePoints = network.nodes[0]?.metrics?.history?.map(h => new Date(h.timestamp)) || [];
         const data = [];
+        const metricName = 'allocation'; // Default to allocation
 
         // Add node metrics history
         network.nodes.forEach(node => {
@@ -48,7 +92,7 @@ export class DetailsPanelManager {
                     timestamp: new Date(point.timestamp),
                     id: node.id,
                     type: `${node.type} node`,
-                    allocation: point.allocation,
+                    allocation: point[metricName] || 0,
                     timeIndex: index
                 });
             });
@@ -61,7 +105,7 @@ export class DetailsPanelManager {
                     timestamp: new Date(point.timestamp),
                     id: `${link.source}->${link.target}`,
                     type: 'link',
-                    allocation: point.allocation,
+                    allocation: point[metricName] || 0,
                     timeIndex: index
                 });
             });
@@ -73,6 +117,11 @@ export class DetailsPanelManager {
     createOrUpdateMetricsPlot(network, containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
+
+        // Force container to have a width if it doesn't already
+        if (container.clientWidth <= 0) {
+            container.style.width = '100%';
+        }
 
         const data = this.prepareMetricsData(network);
         const plotConfig = {
@@ -196,7 +245,14 @@ export class DetailsPanelManager {
             timestamp: new Date(point.timestamp)
         }));
 
-        const plotWidth = width || (this.detailsPanel.clientWidth - 30);
+        // Ensure we have a valid width
+        let plotWidth = width;
+        if (!plotWidth || plotWidth <= 0) {
+            plotWidth = this.detailsPanel.clientWidth - 30;
+            if (plotWidth <= 0) {
+                plotWidth = 500; // Fallback width if all else fails
+            }
+        }
 
         const plotConfig = {
             style: {
@@ -288,185 +344,300 @@ export class DetailsPanelManager {
         }
     }
 
+    // Panel Content Updates
+    initializeDetailSections() {
+        // Create all sections with unique IDs
+        this.contentElement.innerHTML = `
+            <div id="network-overview" class="detail-section"></div>
+            <div id="metric-summary" class="detail-section"></div>
+            <div id="critical-metrics" class="detail-section"></div>
+            <div id="metric-distribution" class="detail-section">
+                <div id="metrics-plot" style="width: 100%; margin-top: 20px;"></div>
+            </div>
+        `;
+    }
+
     updateNetworkOverview(network) {
         this.currentNetwork = network;
         const stats = this.statsManager.calculateNetworkStats(network);
-
-        this.detailsPanel.innerHTML = `
-            <div class="detail-card">
-                <h3>Network Overview</h3>
-                <div class="card-content">
-                    <table>
-                        <tr>
-                            <td>Network ID:</td>
-                            <td>${network.metadata?.id || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                            <td>Total Nodes:</td>
-                            <td>${stats.totalNodes} (${stats.clusterNodes} clusters, ${stats.leafNodes} leaves)</td>
-                        </tr>
-                        <tr>
-                            <td>Total Links:</td>
-                            <td>${stats.totalLinks}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-
-            <div class="detail-card">
-                <h3>Allocation Summary</h3>
-                <div class="card-content">
-                    <table>
-                        <tr>
-                            <td>Avg Node Allocation:</td>
-                            <td>${stats.avgAllocation.nodes.toFixed(2)}%</td>
-                        </tr>
-                        <tr>
-                            <td>Max Node Allocation:</td>
-                            <td>${stats.maxAllocation.nodes.toFixed(2)}%</td>
-                        </tr>
-                        <tr>
-                            <td>Avg Link Allocation:</td>
-                            <td>${stats.avgAllocation.links.toFixed(2)}%</td>
-                        </tr>
-                        <tr>
-                            <td>Max Link Allocation:</td>
-                            <td>${stats.maxAllocation.links.toFixed(2)}%</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-
-            ${this.renderCriticalResources(stats.criticalResources)}
-
-            <div class="detail-card">
-                <h3>Metric Distribution</h3>
-                <div class="card-content">
-                    <div id="metrics-plot" class="history-plot"></div>
-                </div>
-            </div>
-        `;
-
-        // Create the metrics plot
-        setTimeout(() => {
-            this.createOrUpdateMetricsPlot(network, 'metrics-plot');
-        }, 0);
-    }
-
-    updateNodeDetails(node) {
-        const metrics = node.metrics?.current || {};
-        const history = node.metrics?.history || [];
-        const metricName = Object.keys(metrics).find(key => key !== 'capacity') || 'allocation';
+        const metricName = 'allocation'; // Default to allocation
         const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
 
-        this.detailsPanel.innerHTML = `
-            <div class="detail-card">
-                <h3>Node Information</h3>
-                <div class="card-content">
-                    <table>
-                        <tr>
-                            <td>ID:</td>
-                            <td>${node.id}</td>
-                        </tr>
-                        <tr>
-                            <td>Type:</td>
-                            <td>${node.type}</td>
-                        </tr>
-                        ${Object.entries(metrics).map(([key, value]) => `
-                            <tr>
-                                <td>${key.charAt(0).toUpperCase() + key.slice(1)}:</td>
-                                <td>${typeof value === "number" ? value.toFixed(2) + "%" : value}</td>
-                            </tr>
-                        `).join('')}
-                        ${node.type === "cluster" ? `
-                            <tr>
-                                <td>Child Network:</td>
-                                <td>${node.childNetwork || "N/A"}</td>
-                            </tr>
-                        ` : ""}
-                    </table>
-                </div>
-            </div>
+        // Initialize sections if they don't exist
+        if (!document.getElementById('network-overview')) {
+            this.initializeDetailSections();
+        }
 
-            ${history.length > 0 ? `
-                <div class="detail-card">
-                    <h3>${metricTitle} History</h3>
-                    <div class="card-content">
-                        ${this.createHistoryPlot(history, metricName)}
-                    </div>
-                </div>
-            ` : ""}
+        // Update each section individually
+        const overviewSection = document.getElementById('network-overview');
+        overviewSection.innerHTML = `
+            <h3>Network Overview</h3>
+            <table>
+                <tr>
+                    <td>Network ID:</td>
+                    <td>${network.metadata?.id || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td>Total Nodes:</td>
+                    <td>${stats.totalNodes} (${stats.clusterNodes} clusters, ${stats.leafNodes} leaves)</td>
+                </tr>
+                <tr>
+                    <td>Total Links:</td>
+                    <td>${stats.totalLinks}</td>
+                </tr>
+            </table>
+        `;
+
+        const summarySection = document.getElementById('metric-summary');
+        summarySection.innerHTML = `
+            <h3>${metricTitle} Summary</h3>
+            <table>
+                <tr>
+                    <td>Avg Node ${metricTitle}:</td>
+                    <td>${stats.avgAllocation.nodes.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Max Node ${metricTitle}:</td>
+                    <td>${stats.maxAllocation.nodes.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Avg Link ${metricTitle}:</td>
+                    <td>${stats.avgAllocation.links.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Max Link ${metricTitle}:</td>
+                    <td>${stats.maxAllocation.links.toFixed(2)}%</td>
+                </tr>
+            </table>
+        `;
+
+        const criticalSection = document.getElementById('critical-metrics');
+        criticalSection.innerHTML = this.renderCriticalMetrics(stats);
+
+        // Update the plot
+        const plotContainer = document.getElementById('metrics-plot');
+        this.createOrUpdateMetricsPlot(network, 'metrics-plot');
+
+        // Force a resize event to ensure plots render correctly
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+    }
+
+    initializeNodeDetailSections() {
+        this.contentElement.innerHTML = `
+            <div id="node-info" class="detail-section"></div>
+            <div id="metric-history" class="detail-section"></div>
+            <div id="cluster-summary" class="detail-section"></div>
+            <div id="cluster-critical-metrics" class="detail-section"></div>
+        `;
+    }
+
+    updateNodeDetails(node, clusterNetwork = null) {
+        // Initialize sections if they don't exist
+        if (!document.getElementById('node-info')) {
+            this.initializeNodeDetailSections();
+        }
+
+        if (node.type === 'cluster' && clusterNetwork) {
+            this.updateClusterDetails(node, clusterNetwork);
+        } else {
+            this.updateLeafNodeDetails(node);
+        }
+    }
+
+    updateClusterDetails(node, clusterNetwork) {
+        const stats = this.statsManager.calculateNetworkStats(clusterNetwork);
+        const metricName = 'allocation'; // Default to allocation
+        const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
+
+        const nodeInfo = document.getElementById('node-info');
+        nodeInfo.innerHTML = `
+            <h3>Cluster Information</h3>
+            <table>
+                <tr>
+                    <td>Cluster ID:</td>
+                    <td>${node.id}</td>
+                </tr>
+                <tr>
+                    <td>Current ${metricTitle}:</td>
+                    <td>${node.metrics.current[metricName].toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Contained Nodes:</td>
+                    <td>${stats.totalNodes} (${stats.clusterNodes} clusters, ${stats.leafNodes} leaves)</td>
+                </tr>
+                <tr>
+                    <td>Internal Links:</td>
+                    <td>${stats.totalLinks}</td>
+                </tr>
+            </table>
+        `;
+
+        const historySection = document.getElementById('metric-history');
+        if (!historySection.querySelector('.history-plot')) {
+            historySection.innerHTML = `
+                <h3>${metricTitle} History</h3>
+                ${this.createHistoryPlot(node.metrics.history, metricName)}
+            `;
+        } else {
+            const plotContainer = historySection.querySelector('.history-plot');
+            this.createOrUpdateHistoryPlot(node.metrics.history, metricName, null, plotContainer.id);
+        }
+
+        const summarySection = document.getElementById('cluster-summary');
+        summarySection.innerHTML = `
+            <h3>Cluster ${metricTitle} Summary</h3>
+            <table>
+                <tr>
+                    <td>Avg Node ${metricTitle}:</td>
+                    <td>${stats.avgAllocation.nodes.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Max Node ${metricTitle}:</td>
+                    <td>${stats.maxAllocation.nodes.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Avg Link ${metricTitle}:</td>
+                    <td>${stats.avgAllocation.links.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Max Link ${metricTitle}:</td>
+                    <td>${stats.maxAllocation.links.toFixed(2)}%</td>
+                </tr>
+            </table>
+        `;
+
+        const criticalSection = document.getElementById('cluster-critical-metrics');
+        criticalSection.innerHTML = this.renderCriticalMetrics(stats.criticalResources);
+
+        // Force a resize event to ensure plots render correctly
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+    }
+
+    updateLeafNodeDetails(node) {
+        const metricName = 'allocation'; // Default to allocation
+        const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
+
+        const nodeInfo = document.getElementById('node-info');
+        nodeInfo.innerHTML = `
+            <h3>Node Information</h3>
+            <table>
+                <tr>
+                    <td>ID:</td>
+                    <td>${node.id}</td>
+                </tr>
+                <tr>
+                    <td>Type:</td>
+                    <td>${node.type}</td>
+                </tr>
+                <tr>
+                    <td>${metricTitle}:</td>
+                    <td>${node.metrics.current[metricName].toFixed(2)}%</td>
+                </tr>
+            </table>
+        `;
+
+        const historySection = document.getElementById('metric-history');
+        historySection.innerHTML = `
+            <h3>${metricTitle} History</h3>
+            ${this.createHistoryPlot(node.metrics.history, metricName)}
+        `;
+
+        // Clear unused sections
+        document.getElementById('cluster-summary').innerHTML = '';
+        document.getElementById('cluster-critical-metrics').innerHTML = '';
+
+        // Force a resize event to ensure plots render correctly
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+    }
+
+    initializeLinkDetailSections() {
+        this.contentElement.innerHTML = `
+            <div id="link-info" class="detail-section"></div>
+            <div id="link-history" class="detail-section"></div>
         `;
     }
 
     updateLinkDetails(link) {
-        const metrics = link.metrics?.current || {};
-        const history = link.metrics?.history || [];
-        const metricName = Object.keys(metrics).find(key => key !== 'capacity') || 'allocation';
-        const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
-
-        this.detailsPanel.innerHTML = `
-            <div class="detail-card">
-                <h3>Link Information</h3>
-                <div class="card-content">
-                    <table>
-                        <tr>
-                            <td>Source:</td>
-                            <td>${link.source}</td>
-                        </tr>
-                        <tr>
-                            <td>Target:</td>
-                            <td>${link.target}</td>
-                        </tr>
-                        ${Object.entries(metrics).map(([key, value]) => `
-                            <tr>
-                                <td>${key.charAt(0).toUpperCase() + key.slice(1)}:</td>
-                                <td>${typeof value === "number" ? value.toFixed(2) + "%" : value}</td>
-                            </tr>
-                        `).join('')}
-                    </table>
-                </div>
-            </div>
-
-            ${history.length > 0 ? `
-                <div class="detail-card">
-                    <h3>${metricTitle} History</h3>
-                    <div class="card-content">
-                        ${this.createHistoryPlot(history, metricName)}
-                    </div>
-                </div>
-            ` : ""}
-        `;
-    }
-
-    renderCriticalResources(criticalResources) {
-        if (criticalResources.nodes.length === 0 && criticalResources.links.length === 0) {
-            return "";
+        // Initialize sections if they don't exist
+        if (!document.getElementById('link-info')) {
+            this.initializeLinkDetailSections();
         }
 
+        const metricName = 'allocation'; // Default to allocation
+        const metricTitle = metricName.charAt(0).toUpperCase() + metricName.slice(1);
+
+        const linkInfo = document.getElementById('link-info');
+        linkInfo.innerHTML = `
+            <h3>Link Information</h3>
+            <table>
+                <tr>
+                    <td>Source:</td>
+                    <td>${link.source}</td>
+                </tr>
+                <tr>
+                    <td>Target:</td>
+                    <td>${link.target}</td>
+                </tr>
+                <tr>
+                    <td>${metricTitle}:</td>
+                    <td>${link.metrics.current[metricName].toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td>Capacity:</td>
+                    <td>${link.metrics.current.capacity}</td>
+                </tr>
+            </table>
+        `;
+
+        const historySection = document.getElementById('link-history');
+        if (!historySection.querySelector('.history-plot')) {
+            historySection.innerHTML = `
+                <h3>${metricTitle} History</h3>
+                ${this.createHistoryPlot(link.metrics.history, metricName)}
+            `;
+        } else {
+            const plotContainer = historySection.querySelector('.history-plot');
+            this.createOrUpdateHistoryPlot(link.metrics.history, metricName, null, plotContainer.id);
+        }
+
+        // Force a resize event to ensure plots render correctly
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+    }
+
+    // Helper Methods
+    renderCriticalMetrics(stats) {
+        if (!stats.criticalResources) {
+            stats = { criticalResources: { nodes: [], links: [] } };
+        } else if (!stats.nodes && !stats.links) {
+            stats = { nodes: stats.nodes || [], links: stats.links || [] };
+        }
+
+        const criticalResources = stats.criticalResources || stats;
+
+        if (criticalResources.nodes.length === 0 && criticalResources.links.length === 0) {
+            return '';
+        }
+
+        const metricTitle = 'Allocation';
+
         return `
-            <div class="detail-card">
-                <h3>Critical Resources (>75% allocation)</h3>
-                <div class="card-content">
-                    ${criticalResources.nodes.length > 0 ? `
-                        <div class="critical-elements">
-                            <strong>Nodes:</strong>
-                            <ul>
-                                ${criticalResources.nodes.map(node => `<li>${node}</li>`).join("")}
-                            </ul>
-                        </div>
-                    ` : ""}
-                    ${criticalResources.links.length > 0 ? `
-                        <div class="critical-elements">
-                            <strong>Links:</strong>
-                            <ul>
-                                ${criticalResources.links.map(link => `<li>${link}</li>`).join("")}
-                            </ul>
-                        </div>
-                    ` : ""}
-                </div>
+            <div class="detail-section">
+                <h3>Critical ${metricTitle} Elements (>75%)</h3>
+                ${criticalResources.nodes.length ? `
+                    <p><strong>Nodes:</strong> ${criticalResources.nodes.join(', ')}</p>
+                ` : ''}
+                ${criticalResources.links.length ? `
+                    <p><strong>Links:</strong> ${criticalResources.links.join(', ')}</p>
+                ` : ''}
             </div>
         `;
     }
-
 }
