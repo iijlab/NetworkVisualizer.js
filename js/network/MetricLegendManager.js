@@ -1,8 +1,11 @@
+import { ColorScaleEditor } from "./ColorScaleEditor.js";
+
 export class MetricLegendManager {
     constructor(config) {
         this.config = config;
         this.legendContent = document.querySelector(".metric-legend .legend-content");
         this.legendTitle = document.querySelector(".metric-legend h4");
+        this.colorScaleEditor = new ColorScaleEditor();
 
         if (!this.legendContent) {
             console.warn("Metric legend content element not found");
@@ -30,10 +33,12 @@ export class MetricLegendManager {
 
         // Create dropdown button and add it to legend content (if available)
         if (this.config.visualization.availableMetrics) {
-            // Create dropdown container
-            const dropdownContainer = document.createElement("div");
-            dropdownContainer.className = "legend-dropdown";
-            dropdownContainer.style.marginRight = "1rem";
+            // Create container for controls
+            const controlsContainer = document.createElement("div");
+            controlsContainer.className = "legend-controls";
+            controlsContainer.style.display = "flex";
+            controlsContainer.style.alignItems = "center";
+            controlsContainer.style.marginRight = "1rem";
 
             // Create dropdown button
             const button = document.createElement('button');
@@ -74,14 +79,24 @@ export class MetricLegendManager {
             });
 
             dropdown.appendChild(menu);
-            dropdownContainer.appendChild(button);
-            dropdownContainer.appendChild(dropdown);
+            controlsContainer.appendChild(button);
+            controlsContainer.appendChild(dropdown);
 
             // Add data-toggle attribute to button
             button.setAttribute('data-toggle', dropdown.id);
 
-            // Add dropdown container to legend content
-            this.legendContent.appendChild(dropdownContainer);
+            // Create configure button
+            const configureButton = document.createElement('button');
+            configureButton.className = 'button small';
+            configureButton.textContent = 'Configure';
+            configureButton.style.marginLeft = '0.5rem';
+            configureButton.onclick = () => {
+                this.openColorScaleEditor();
+            };
+            controlsContainer.appendChild(configureButton);
+
+            // Add controls container to legend content
+            this.legendContent.appendChild(controlsContainer);
 
             // Initialize Foundation dropdown
             $(document).ready(() => {
@@ -125,7 +140,21 @@ export class MetricLegendManager {
             gradientBar.className = "gradient-bar";
             gradientBar.style.height = "20px";
             gradientBar.style.width = "100%";
-            gradientBar.style.background = `linear-gradient(to right, ${colorScale.min}, ${colorScale.max})`;
+
+            // Check if we have color stops
+            if (colorScale.stops && colorScale.stops.length >= 2) {
+                // Create gradient from stops
+                const sortedStops = [...colorScale.stops].sort((a, b) => a.position - b.position);
+                const gradientStops = sortedStops.map(stop => {
+                    return `${stop.color} ${stop.position * 100}%`;
+                }).join(', ');
+
+                gradientBar.style.background = `linear-gradient(to right, ${gradientStops})`;
+            } else {
+                // Fall back to min/max gradient
+                gradientBar.style.background = `linear-gradient(to right, ${colorScale.min}, ${colorScale.max})`;
+            }
+
             gradientBar.style.borderRadius = "3px";
             gradientBar.style.marginBottom = "2px";
 
@@ -179,6 +208,18 @@ export class MetricLegendManager {
                 this.legendContent.appendChild(legendItem);
             });
         }
+    }
+
+    openColorScaleEditor() {
+        const currentMetric = this.config.visualization.metric;
+        this.colorScaleEditor.open(this.config, currentMetric, (updatedConfig) => {
+            this.config = updatedConfig;
+            this.setupLegend();
+
+            // Trigger update event to refresh visualization
+            const event = new CustomEvent('metricChanged', { detail: { metric: currentMetric } });
+            document.dispatchEvent(event);
+        });
     }
 
     updateLegend(newConfig) {

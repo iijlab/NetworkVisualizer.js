@@ -126,7 +126,8 @@ export class NetworkUpdater {
 
                             // Update details panel if this is the selected node
                             if (selectedElement) {
-                                const selectedNode = d3.select(selectedElement.closest("g"));
+                                const selectedGroup = selectedElement.closest("g");
+                                const selectedNode = d3.select(selectedGroup);
                                 const selectedNodeId = selectedNode.select("text").text();
 
                                 if (selectedNodeId === id) {
@@ -175,7 +176,7 @@ export class NetworkUpdater {
                 if (!line.empty() && !arrow.empty()) {
                     // Check if this is the selected link
                     const isSelected = this.visualizerCore.networkInteraction.getSelectedElement() === line.node();
-                    const linkGroup = line.closest("g");
+                    const linkGroup = line.node().closest("g");
                     const selectionHighlight = d3.select(linkGroup).select(".link-selection");
                     const highlightOpacity = selectionHighlight.attr("opacity");
 
@@ -193,12 +194,12 @@ export class NetworkUpdater {
 
                 // Update details panel if this is the selected link
                 if (selectedElement) {
-                    const selectedGroup = d3.select(selectedElement.closest("g"));
-                    const selectedLine = selectedGroup.select("line.link-half");
+                    const selectedGroup = selectedElement.closest("g");
+                    const selectedLine = d3.select(selectedGroup).select("line.link-half");
 
-                    if (selectedLine) {
-                        const selectedSource = selectedLine.getAttribute("source");
-                        const selectedTarget = selectedLine.getAttribute("target");
+                    if (!selectedLine.empty()) {
+                        const selectedSource = selectedLine.attr("source");
+                        const selectedTarget = selectedLine.attr("target");
 
                         if (selectedSource === source && selectedTarget === target) {
                             detailsPanelManager.updateLinkDetails(linkData);

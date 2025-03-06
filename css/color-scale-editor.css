@@ -1,0 +1,205 @@
+/* Color Scale Editor Styles */
+.color-scale-editor {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.scale-container {
+  width: 100%;
+  height: 80px;
+  margin: 20px 0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.color-gradient {
+  width: 100%;
+  height: 100%;
+}
+
+.controls {
+  margin-top: 30px;
+}
+
+.color-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.color-item {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.color-item input[type="color"] {
+  margin-right: 10px;
+}
+
+.color-item .position-input {
+  width: 60px;
+  margin: 0 10px;
+}
+
+.color-item .remove-btn {
+  margin-left: 10px;
+  background: #ff5555;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-color-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.slider-container {
+  margin-top: 25px;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+.color-indicator {
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.color-value {
+  margin-top: 10px;
+  font-family: monospace;
+}
+
+.markers {
+  display: flex;
+  width: 100%;
+  position: relative;
+  height: 20px;
+}
+
+.marker {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #333;
+}
+
+.mode-selector {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+.mode-selector label {
+  display: inline-block;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.mode-select {
+  min-width: 150px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.editor-content {
+  display: none;
+}
+
+.editor-content.active {
+  display: block;
+}
+
+.range-list {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.range-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.range-item input[type="color"] {
+  margin-right: 10px;
+}
+
+.range-item input[type="number"] {
+  width: 80px;
+  margin: 0 10px;
+}
+
+.range-item .remove-btn {
+  margin-left: 10px;
+  background: #ff5555;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-range-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+/* Dark mode support */
+body.dark-mode .mode-selector {
+  border-bottom-color: #444;
+}
+
+body.dark-mode .mode-select {
+  background-color: #2d2d2d;
+  border-color: #444;
+  color: #eee;
+}
+
+body.dark-mode .marker {
+  color: #bbb;
+}

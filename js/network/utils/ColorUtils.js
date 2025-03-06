@@ -18,21 +18,30 @@ export class ColorUtils {
 
         // Handle different metric types
         if (metricConfig.type === "continuous") {
-            // For continuous metrics, interpolate between min and max colors
+            // For continuous metrics, interpolate between color stops
             const colorScale = metricConfig.colorScale;
-            if (!colorScale || !colorScale.min || !colorScale.max) {
+            if (!colorScale) {
                 console.warn(`Invalid color scale for continuous metric: ${metricName}`);
                 return "#006994"; // Default blue color
             }
 
             // Normalize value between 0 and 1
             const factor = Math.max(0, Math.min(1, value / 100));
-            const color = this.interpolateColors(colorScale.min, colorScale.max, factor);
 
-            // Debug log for selected color
-            console.debug(`Selected continuous color: ${color} (factor: ${factor})`);
-
-            return color;
+            // Check if we have color stops
+            if (colorScale.stops && colorScale.stops.length >= 2) {
+                const color = this.interpolateColorStops(colorScale.stops, factor);
+                console.debug(`Selected multi-stop color: ${color} (factor: ${factor})`);
+                return color;
+            } else if (colorScale.min && colorScale.max) {
+                // Fall back to min/max interpolation for backward compatibility
+                const color = this.interpolateColors(colorScale.min, colorScale.max, factor);
+                console.debug(`Selected continuous color: ${color} (factor: ${factor})`);
+                return color;
+            } else {
+                console.warn(`Invalid color scale for continuous metric: ${metricName}`);
+                return "#006994"; // Default blue color
+            }
         } else {
             // For range-based metrics
             const ranges = metricConfig.ranges || config.visualization.ranges;
@@ -77,5 +86,35 @@ export class ColorUtils {
         const b = c1.b + factor * (c2.b - c1.b);
 
         return rgb2hex(r, g, b);
+    }
+
+    static interpolateColorStops(stops, factor) {
+        // Ensure stops are sorted by position
+        const sortedStops = [...stops].sort((a, b) => a.position - b.position);
+
+        // If factor is exactly on a stop, return that color
+        const exactStop = sortedStops.find(stop => stop.position === factor);
+        if (exactStop) {
+            return exactStop.color;
+        }
+
+        // Find the stops that factor falls between
+        let beforeStop = sortedStops[0];
+        let afterStop = sortedStops[sortedStops.length - 1];
+
+        for (let i = 0; i < sortedStops.length - 1; i++) {
+            if (factor >= sortedStops[i].position && factor <= sortedStops[i + 1].position) {
+                beforeStop = sortedStops[i];
+                afterStop = sortedStops[i + 1];
+                break;
+            }
+        }
+
+        // Calculate how far factor is between beforeStop and afterStop (0 to 1)
+        const segmentLength = afterStop.position - beforeStop.position;
+        const segmentPosition = segmentLength === 0 ? 0 : (factor - beforeStop.position) / segmentLength;
+
+        // Interpolate between the two colors
+        return this.interpolateColors(beforeStop.color, afterStop.color, segmentPosition);
     }
 }
