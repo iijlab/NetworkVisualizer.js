@@ -110,8 +110,40 @@ export class NetworkVisualizerCore {
         // Listen for metric changes
         document.addEventListener('metricChanged', (event) => {
             const metricName = event.detail.metric;
+            const previousMetric = event.detail.previousMetric;
+
+            console.log(`Metric changed: ${previousMetric} -> ${metricName}`);
+
+            // Update the config
             this.config.visualization.metric = metricName;
+
+            // IMPORTANT: Store the current network ID before switching generators
+            const currentNetworkId = this.currentNetwork?.metadata?.id || 'root';
+            console.log(`Current network ID: ${currentNetworkId}`);
+
+            // Switch mock data generator if available
+            if (window.mockGenerators && window.mockGenerators[metricName]) {
+                console.log(`Switching to ${metricName} mock data generator`);
+
+                // Stop current updates
+                this.networkUpdater.stopDynamicUpdates();
+
+                // Set the new generator
+                this.mockDataGenerator = window.mockGenerators[metricName];
+
+                // Make sure the current network is in the new generator
+                if (this.currentNetwork && !this.mockDataGenerator.hasNetwork(currentNetworkId)) {
+                    console.log(`Adding current network to ${metricName} generator`);
+                    this.mockDataGenerator.addNetwork(this.currentNetwork);
+                }
+
+                // Restart updates with the new generator
+                this.networkUpdater.startDynamicUpdates(currentNetworkId, this.mockDataGenerator);
+            }
+
+            // Redraw the visualization with the new metric
             if (this.currentNetwork) {
+                console.log(`Redrawing visualization for network ${currentNetworkId} with metric ${metricName}`);
                 this.createVisualization(this.currentNetwork);
             }
         });
@@ -235,9 +267,18 @@ export class NetworkVisualizerCore {
             // Update details panel with network overview
             this.detailsPanelManager.updateNetworkOverview(networkData);
 
-            // Add to mock data generator if needed
+            // Add to all mock data generators if needed
             if (this.mockDataGenerator && !this.mockDataGenerator.hasNetwork(networkId)) {
                 this.mockDataGenerator.addNetwork(networkData);
+            }
+
+            // Also add to other mock generators if available
+            if (window.mockGenerators) {
+                Object.values(window.mockGenerators).forEach(generator => {
+                    if (generator !== this.mockDataGenerator && !generator.hasNetwork(networkId)) {
+                        generator.addNetwork(networkData);
+                    }
+                });
             }
 
             // Start dynamic updates after everything is set up

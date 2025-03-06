@@ -57,16 +57,28 @@ async function loadMockData() {
         }
         const rootNetwork = await rootNetworkResponse.json();
 
-        // Initialize mock data generator with root network
-        const mockGenerator = new MockNetworkDataGenerator(rootNetwork, {
+        // Initialize mock data generator for allocation metric
+        const allocationGenerator = new MockNetworkDataGenerator(rootNetwork, {
             updateInterval: 5000,
-            metricName: 'allocation', // Keep allocation as default
+            metricName: 'allocation',
             historyLength: 50,
             historyInterval: 60000 // 1 minute intervals for demo
         });
 
+        // Create a deep copy of the root network for the load metric
+        const rootNetworkCopy = JSON.parse(JSON.stringify(rootNetwork));
+
+        // Initialize mock data generator for load metric
+        const loadGenerator = new MockNetworkDataGenerator(rootNetworkCopy, {
+            updateInterval: 5000,
+            metricName: 'load',
+            historyLength: 50,
+            historyInterval: 60000
+        });
+
         return {
-            allocation: mockGenerator
+            allocation: allocationGenerator,
+            load: loadGenerator
         };
     } catch (error) {
         console.error('Error loading mock data:', error);
@@ -140,12 +152,20 @@ async function initializeVisualizer() {
 
         if (useMockData) {
             try {
-                // Initialize mock data generator
+                // Initialize mock data generators
                 const mockGenerators = await loadMockData();
-                const mockGenerator = mockGenerators.allocation;
+                const allocationGenerator = mockGenerators.allocation;
+                const loadGenerator = mockGenerators.load;
 
-                // Set mock data generator
+                // Make mock generators available globally for metric switching
+                window.mockGenerators = mockGenerators;
+
+                // Set mock data generator based on current metric
+                const currentMetric = config.visualization.metric;
+                const mockGenerator = currentMetric === 'load' ? loadGenerator : allocationGenerator;
+
                 visualizer.setMockDataGenerator(mockGenerator);
+                console.debug(`Initial mock data generator set to ${currentMetric}`);
 
                 // Override fetch methods for mock data
                 visualizer.fetchNetworkData = async (networkId) => {
@@ -156,10 +176,17 @@ async function initializeVisualizer() {
                         }
                         let networkData = await response.json();
 
-                        // Add network to mock generator if it doesn't exist
+                        // Add network to current mock generator if it doesn't exist
                         if (!mockGenerator.hasNetwork(networkId)) {
                             mockGenerator.addNetwork(networkData);
                         }
+
+                        // Also add to all other mock generators
+                        Object.values(mockGenerators).forEach(generator => {
+                            if (generator !== mockGenerator && !generator.hasNetwork(networkId)) {
+                                generator.addNetwork(networkData);
+                            }
+                        });
 
                         return networkData;
                     } catch (error) {
@@ -178,9 +205,14 @@ async function initializeVisualizer() {
                     console.log(`Starting dynamic updates for network ${networkId}...`);
 
                     const interval = setInterval(() => {
-                        const updates = mockGenerator.generateUpdate(networkId);
+                        // Get the current metric from the config
+                        const currentMetric = visualizer.config.visualization.metric;
+                        // Use the appropriate generator based on the current metric
+                        const generator = currentMetric === 'load' ? loadGenerator : allocationGenerator;
+
+                        const updates = generator.generateUpdate(networkId);
                         if (updates) {
-                            console.log(`Generated update for network ${networkId}:`, updates);
+                            console.log(`Generated update for network ${networkId} with metric ${currentMetric}:`, updates);
                             visualizer.applyNetworkUpdates(updates);
                         }
                     }, 5000);  // Update every 5 seconds

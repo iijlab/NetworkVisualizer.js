@@ -561,6 +561,10 @@ export class ColorScaleEditor {
         // Get active mode
         const activeMode = $('#colorScaleMode').val();
 
+        console.debug('Saving color scale with mode:', activeMode);
+        console.debug('Current color stops:', this.colorStops);
+        console.debug('Current ranges:', this.ranges);
+
         // Validate minimum number of colors/ranges
         if (activeMode === 'continuous' && this.colorStops.length < 2) {
             alert("You need at least 2 colors for a continuous scale!");
@@ -568,8 +572,38 @@ export class ColorScaleEditor {
         }
 
         if (activeMode === 'range' && this.ranges.length < 2) {
-            alert("You need at least 2 ranges for a range scale!");
-            return;
+            console.warn('Not enough ranges:', this.ranges);
+
+            // If we have ranges in the config, use those
+            if (this.currentMetricConfig && this.currentMetricConfig.ranges && this.currentMetricConfig.ranges.length >= 2) {
+                console.debug('Using ranges from config:', this.currentMetricConfig.ranges);
+                this.ranges = [...this.currentMetricConfig.ranges];
+            } else if (this.config.visualization.ranges && this.config.visualization.ranges.length >= 2) {
+                console.debug('Using ranges from global config:', this.config.visualization.ranges);
+                this.ranges = [...this.config.visualization.ranges];
+            } else {
+                // Create default ranges if needed
+                console.debug('Creating default ranges');
+                this.ranges = [
+                    { max: 0, color: "#006994" },
+                    { max: 100, color: "#f44336" }
+                ];
+            }
+
+            // Re-render the range list with the updated ranges
+            this.renderRangeList();
+
+            // If we still don't have enough ranges, show the error
+            if (this.ranges.length < 2) {
+                alert("You need at least 2 ranges for a range scale!");
+                return;
+            }
+        }
+
+        // Ensure we have a valid metric configuration object
+        if (!this.currentMetricConfig) {
+            console.debug('Creating new metric configuration');
+            this.currentMetricConfig = {};
         }
 
         // Update metric configuration
@@ -601,9 +635,15 @@ export class ColorScaleEditor {
             this.currentMetricConfig.type = 'range';
         }
 
-        // Update metrics config
+        // Ensure we have a metrics object in the config
         if (!this.config.visualization.metrics) {
             this.config.visualization.metrics = {};
+        }
+
+        // Ensure we have a valid metric name
+        if (!this.currentMetric) {
+            console.warn('No current metric name set, using "default"');
+            this.currentMetric = 'default';
         }
 
         this.config.visualization.metrics[this.currentMetric] = this.currentMetricConfig;
