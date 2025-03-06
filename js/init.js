@@ -170,21 +170,29 @@ async function initializeVisualizer() {
                 // Override fetch methods for mock data
                 visualizer.fetchNetworkData = async (networkId) => {
                     try {
+                        console.log(`Fetching network data for ${networkId}`);
                         const response = await fetch(`data/networks/${networkId}.json`);
                         if (!response.ok) {
                             throw new Error(`Failed to load network data: ${response.statusText}`);
                         }
                         let networkData = await response.json();
 
-                        // Add network to current mock generator if it doesn't exist
-                        if (!mockGenerator.hasNetwork(networkId)) {
-                            mockGenerator.addNetwork(networkData);
+                        // CRITICAL: Make sure the network has a metadata.id field
+                        if (!networkData.metadata) {
+                            networkData.metadata = { id: networkId };
+                        } else if (!networkData.metadata.id) {
+                            networkData.metadata.id = networkId;
                         }
 
-                        // Also add to all other mock generators
-                        Object.values(mockGenerators).forEach(generator => {
-                            if (generator !== mockGenerator && !generator.hasNetwork(networkId)) {
-                                generator.addNetwork(networkData);
+                        console.log(`Successfully loaded network ${networkId}`);
+
+                        // Add network to ALL mock generators
+                        Object.entries(mockGenerators).forEach(([metricName, generator]) => {
+                            if (!generator.hasNetwork(networkId)) {
+                                console.log(`Adding network ${networkId} to ${metricName} generator`);
+                                // Create a deep copy for each generator to avoid cross-contamination
+                                const networkDataCopy = JSON.parse(JSON.stringify(networkData));
+                                generator.addNetwork(networkDataCopy);
                             }
                         });
 

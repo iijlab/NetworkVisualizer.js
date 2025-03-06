@@ -235,11 +235,21 @@ export class MockNetworkDataGenerator {
     }
 
     addNetwork(networkData) {
+        console.log(`Adding network ${networkData.metadata?.id || 'unknown'} to ${this.options.metricName} generator`);
+
+        // Ensure the network has a metadata.id field
+        if (!networkData.metadata) {
+            networkData.metadata = { id: 'root' };
+            console.log(`Added missing metadata.id to network`);
+        }
+
         this.initializeNetworkGenerator(networkData);
     }
 
     hasNetwork(networkId) {
-        return this.networkGenerators.has(networkId);
+        const result = this.networkGenerators.has(networkId);
+        console.log(`Checking if ${this.options.metricName} generator has network ${networkId}: ${result}`);
+        return result;
     }
 
     resetNetwork(networkId, newNetworkData) {

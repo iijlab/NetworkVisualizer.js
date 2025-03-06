@@ -68,16 +68,14 @@ export class NetworkUpdater {
             return;
         }
 
-        if (!updates || !updates.changes) {
-            console.warn("Invalid update data received");
-            return;
-        }
-
+        // Get the current metric and other required objects
         const svg = d3.select(this.visualizerCore.containerId);
         const currentNetwork = this.visualizerCore.currentNetwork;
         const detailsPanelManager = this.visualizerCore.detailsPanelManager;
         const selectedElement = this.visualizerCore.selectedElement;
         const metricName = this.visualizerCore.config.visualization.metric;
+
+        console.log(`Applying network updates for metric: ${metricName}`);
 
         // Update nodes
         Object.entries(updates.changes.nodes || {}).forEach(([id, change]) => {
@@ -116,7 +114,7 @@ export class NetworkUpdater {
                             const highlightOpacity = nodeSelection.select(".selection-highlight").attr("opacity");
 
                             // Update visual appearance using NetworkRenderer's method
-                            console.debug(`Updating node ${id} appearance (isCluster: ${isCluster})`);
+                            console.log(`Updating node ${id} appearance (isCluster: ${isCluster}) with metric ${metricName}`);
                             this.visualizerCore.networkRenderer.updateNodeColor(circle, change.metrics, isCluster);
 
                             // Restore selection highlight if this was the selected node
@@ -182,6 +180,7 @@ export class NetworkUpdater {
 
                     const linkElements = { line, arrow };
                     // Update visual appearance using NetworkRenderer's method
+                    console.log(`Updating link ${source}->${target} with metric ${metricName}`);
                     this.visualizerCore.networkRenderer.updateLinkColor(linkElements, change.metrics);
 
                     // Restore selection highlight if this was the selected link

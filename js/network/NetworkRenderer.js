@@ -242,19 +242,39 @@ export class NetworkRenderer {
 
     updateNodeColor(nodeElement, metrics, isCluster = false) {
         const newColor = ColorUtils.getColorForMetric(metrics, this.config);
-        console.debug(`Updating node color to ${newColor} (isCluster: ${isCluster})`);
+        const metricName = this.config.visualization.metric;
+        console.log(`Updating node color to ${newColor} for metric ${metricName} (isCluster: ${isCluster})`);
+
+        // Store the original __data__ to preserve it
+        const originalData = nodeElement.node().__data__;
+
         nodeElement
             .transition()
             .duration(750)
             .style("fill", isCluster ? "white" : newColor)
-            .style("stroke", newColor);
+            .style("stroke", newColor)
+            .on("end", function () {
+                // Ensure the __data__ is preserved after the transition
+                this.__data__ = originalData;
+            });
     }
 
     updateLinkColor(linkElements, metrics) {
         const newColor = ColorUtils.getColorForMetric(metrics, this.config);
-        console.debug(`Updating link color to ${newColor}`);
+        const metricName = this.config.visualization.metric;
+        console.log(`Updating link color to ${newColor} for metric ${metricName}`);
+
+        // Store the original __data__ to preserve it
+        const lineData = linkElements.line.node().__data__;
+        const arrowData = linkElements.arrow.node().__data__;
+
+        // Update colors
         linkElements.line.attr("stroke", newColor);
         linkElements.arrow.attr("fill", newColor);
+
+        // Ensure data is preserved
+        linkElements.line.node().__data__ = lineData;
+        linkElements.arrow.node().__data__ = arrowData;
     }
 
     updateLinkPositions(linkGroups, nodes) {
