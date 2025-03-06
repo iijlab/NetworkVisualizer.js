@@ -256,6 +256,18 @@ async function initializeVisualizer() {
             };
         }
 
+        // Add event listener for color scale changes
+        document.addEventListener('colorScaleChanged', (event) => {
+            const { config } = event.detail;
+            console.log('Color scale changed event received in init.js');
+
+            // Update the visualizer's config
+            visualizer.config = config;
+
+            // Force a re-render of the current network with the new colors
+            visualizer.refreshCurrentView();
+        });
+
         // Initialize with root network and ensure it's loaded
         try {
             await visualizer.loadNetwork("root");

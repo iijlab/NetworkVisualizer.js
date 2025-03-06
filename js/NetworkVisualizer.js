@@ -3,6 +3,55 @@ import { NetworkVisualizerCore } from "./network/NetworkVisualizerCore.js";
 export class NetworkVisualizer extends NetworkVisualizerCore {
     constructor(containerId, config = {}) {
         super(containerId, config);
+
+        // Listen for color scale changes
+        document.addEventListener('colorScaleChanged', (event) => {
+            console.log('Color scale changed event received:', event.detail);
+            this.handleColorScaleChange(event.detail);
+        });
+    }
+
+    handleColorScaleChange(detail) {
+        // Update the config
+        if (detail.config && detail.metric) {
+            this.config = detail.config;
+
+            // Update the color scale mapping
+            this.updateColorScaleMapping();
+
+            // Re-render the visualization with the new colors
+            this.updateVisualization();
+        }
+    }
+
+    updateColorScaleMapping() {
+        const metric = this.config.visualization.metric;
+        const metricConfig = this.config.visualization.metrics?.[metric] || {};
+        const metricType = metricConfig.type || 'range';
+
+        console.log(`Updating color scale mapping for metric ${metric} with type ${metricType}`);
+    }
+
+    updateVisualization() {
+        // Re-render all nodes and links with the updated color scale
+        if (!this.currentNetwork) {
+            console.warn('No current network to update visualization');
+            return;
+        }
+
+        console.log('Updating visualization with new color scale');
+        this.createVisualization(this.currentNetwork);
+    }
+
+    refreshCurrentView() {
+        // Get the current network ID
+        const currentNetworkId = this.currentNetwork?.metadata?.id || "root";
+
+        // Apply the current color scale without reloading the network data
+        this.updateColorScaleMapping();
+        this.updateVisualization();
+
+        console.log(`Refreshed view for network ${currentNetworkId} with updated color scales`);
     }
 
     async fetchNetworkData(networkId) {

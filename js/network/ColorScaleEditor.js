@@ -107,8 +107,11 @@ export class ColorScaleEditor {
     }
 
     setupEventHandlers() {
+        // Store a reference to 'this' for use in event handlers
+        const self = this;
+
         // Mode selector change event
-        $(document).on('change', '#colorScaleMode', (e) => {
+        $(document).on('change', '#colorScaleMode', function (e) {
             const mode = $(e.currentTarget).val();
 
             // Update active content
@@ -117,28 +120,33 @@ export class ColorScaleEditor {
         });
 
         // Add color button
-        $(document).on('click', '#addColorBtn', () => {
-            this.addColorStop();
+        $(document).on('click', '#addColorBtn', function () {
+            self.addColorStop();
         });
 
         // Add range button
-        $(document).on('click', '#addRangeBtn', () => {
-            this.addRange();
+        $(document).on('click', '#addRangeBtn', function () {
+            self.addRange();
         });
 
         // Save button
-        $(document).on('click', '#saveColorScale', () => {
-            this.saveColorScale();
+        $(document).on('click', '#saveColorScale', function () {
+            // Check if config is available
+            if (!self.config) {
+                console.error('Config is null in saveColorScale');
+                return;
+            }
+            self.saveColorScale();
         });
 
         // Color slider
-        $(document).on('input', '#colorSlider', () => {
-            this.updateColorDisplay();
+        $(document).on('input', '#colorSlider', function () {
+            self.updateColorDisplay();
         });
 
         // Modal open event
-        $(document).on('open.zf.reveal', `#${this.modalId}`, () => {
-            this.initializeEditor();
+        $(document).on('open.zf.reveal', `#${this.modalId}`, function () {
+            self.initializeEditor();
         });
     }
 
@@ -650,8 +658,21 @@ export class ColorScaleEditor {
 
         console.debug('Saving color scale config:', this.currentMetricConfig);
 
+        // Create a detailed event with all necessary information
+        const changeEvent = new CustomEvent('colorScaleChanged', {
+            detail: {
+                metric: this.currentMetric,
+                config: this.config,
+                metricConfig: this.currentMetricConfig
+            }
+        });
+
         // Close modal
         $(`#${this.modalId}`).foundation('close');
+
+        // Dispatch the event first, then call the callback
+        document.dispatchEvent(changeEvent);
+        console.debug('Dispatched colorScaleChanged event for metric:', this.currentMetric);
 
         // Call save callback
         if (this.onSaveCallback) {

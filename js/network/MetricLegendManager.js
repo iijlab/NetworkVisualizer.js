@@ -204,9 +204,9 @@ export class MetricLegendManager {
             this.config = updatedConfig;
             this.setupLegend();
 
-            // Trigger update event to refresh visualization
-            const event = new CustomEvent('metricChanged', { detail: { metric: currentMetric } });
-            document.dispatchEvent(event);
+            // Note: We don't need to dispatch metricChanged here anymore
+            // as the ColorScaleEditor now dispatches colorScaleChanged
+            // which will be handled by the NetworkVisualizer
         });
     }
 
